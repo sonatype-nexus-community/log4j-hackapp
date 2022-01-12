@@ -69,6 +69,7 @@
                 <div class="card">
                     <div class="card-body">
                         <button ic-post-to="/clear" class="button btn-danger float-right">Clear Consoles</button>
+                        <button ic-post-to="/cancel" class="button btn-danger float-right">Cancel executions</button>
 
                     </div>
                 </div>

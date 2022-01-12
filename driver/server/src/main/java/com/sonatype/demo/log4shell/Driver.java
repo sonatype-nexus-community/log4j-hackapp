@@ -28,7 +28,7 @@ public class Driver {
     public Map<String, JavaVersion> javaVersions =new HashMap<>();
     public Map<String, SystemProperty> vmProperties =new HashMap<>();
     private BlockingQueue<DriverConfig> queue=new LinkedBlockingQueue<>();
-    public ResultsStore rs=new ResultsStore();
+    public ResultsStore rs=new ResultsStore(this);
     private static boolean local=true;
 
     public Driver() throws IOException {
@@ -41,9 +41,10 @@ public class Driver {
     private void loadVMProperties() {
         SystemProperty p=new SystemProperty("com.sun.jndi.ldap.object.trustURLCodebase","true");
         vmProperties.put(p.name,p);
+        p.id=vmProperties.size();
         p=new SystemProperty("com.sun.jndi.ldap.object.trustSerialData","true");
         vmProperties.put(p.name,p);
-
+        p.id=vmProperties.size();
     }
 
     private void launcherRUnner() {
@@ -100,20 +101,18 @@ public class Driver {
 
  public  void drive(String logMsg) {
         log.info("drive log4j / jvm combinations");
-        List<String> props=new LinkedList<>();
+        List<SystemProperty> props=new LinkedList<>();
         for(SystemProperty sp:vmProperties.values()) {
             if(sp.active) {
-                String v="-D"+sp.name+"="+sp.value;
-                props.add(v);
+                props.add(sp);
             }
         }
-        String[] vmargs=props.toArray(new String[0]);
 
         for(LogVersion lv:logVersions.values()) {
             if(lv.active) {
                 for (JavaVersion jv : javaVersions.values()) {
                     if(jv.active){
-                        DriverConfig dc=new DriverConfig(jv,lv,vmargs,logMsg);
+                        DriverConfig dc=new DriverConfig(jv,lv,props,logMsg);
                         queue.add(dc);
 
                     }
@@ -147,6 +146,14 @@ public class Driver {
 
         List<String> data=Files.readAllLines(logger.toPath());
 
+        Iterator<String> is=data.iterator();
+        while(is.hasNext()) {
+            String line=is.next();
+            if(line.startsWith("WARNING: sun.reflect.Reflection.getCallerClass is not supported")) {
+                is.remove();
+            }
+        }
+
         log.info("resp {}",data);
 
         return data.toArray(new String[0]);
@@ -158,6 +165,8 @@ public class Driver {
         List<String> parameters=new LinkedList<>();
         parameters.add("docker");
         parameters.add("run");
+        parameters.add("--pull");
+        parameters.add("never");
         parameters.add("--rm");
         parameters.add("-e");
         parameters.add("MODE=production");
@@ -184,7 +193,7 @@ public class Driver {
         parameters.add(dc.jv.version);
         // setup java launcher
         parameters.add("java");
-        if(dc.vmargs!=null) for(String v: dc.vmargs) parameters.add(v);
+        if(dc.vmargs!=null) for(SystemProperty v: dc.vmargs) parameters.add(v.toVMString());
 
         String classpath="/app/runner/target/runner-1.0-SNAPSHOT.jar:/app/driver/log4jversions/"+dc.lv.version+"/target/"+dc.lv.version+"-jar-with-dependencies.jar";
 
@@ -275,5 +284,11 @@ public class Driver {
         } else {
             log.error("prop id {} does not exist",key);
         }
+    }
+
+    public void cancel() {
+
+        queue.clear();
+
     }
 }

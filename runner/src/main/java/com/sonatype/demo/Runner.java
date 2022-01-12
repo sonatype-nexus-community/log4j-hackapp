@@ -41,7 +41,7 @@ public class Runner {
 
         try {
 
-            logger.info("!!! "+msg);
+            logger.info(msg);
 
         } catch(Throwable t) {
             t.printStackTrace();;

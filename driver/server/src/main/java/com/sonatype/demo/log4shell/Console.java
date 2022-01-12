@@ -10,11 +10,14 @@ public class Console {
 
     public String name;
     public String handle;
-    public List<String> records=new LinkedList<>();
+    public List<Record> records=new LinkedList<>();
 
     public Console(String name) {
         this.name=name;
-        this.handle=name.replace(":","_").toLowerCase();
+        this.handle=name.replace(":","_")
+                .replace(".","_")
+                .replace("-","_")
+                .toLowerCase();
     }
 
 }

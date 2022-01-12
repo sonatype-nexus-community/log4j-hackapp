@@ -1,2 +1,6 @@
 openjdk:8u102-jre
-openjdk:9-b140-jre
+openjdk:8-jdk-oracle
+openjdk:10.0.1-10-jre
+openjdk:11.0.10-jre-slim-buster
+openjdk:17
+openjdk:19-ea-4-jdk-slim-buster

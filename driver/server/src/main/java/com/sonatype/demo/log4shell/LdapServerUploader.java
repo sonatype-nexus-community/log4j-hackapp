@@ -47,7 +47,7 @@ public class LdapServerUploader {
         ctx.bind("cn=thankyou","thank you for your data");
         ctx.bind("cn=404","nope - no idea");
 
-        Reference ref = new Reference("ExternalObject","ExternalObject","http://jazzette.local/code/");
+        Reference ref = new Reference("ExternalObject","ExternalObject","http://"+server+":8080/code/");
         ctx.bind("cn=bogus",ref);
     }
 }

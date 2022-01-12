@@ -23,4 +23,7 @@ public class Todo {
         return new Todo(title, UUID.randomUUID().toString(), Status.ACTIVE);
     }
 
+    public String toString() {
+        return "todo(title="+title+", status="+status+")";
+    }
 }

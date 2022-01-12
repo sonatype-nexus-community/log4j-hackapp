@@ -10,8 +10,11 @@ import org.slf4j.LoggerFactory;
 import spark.ModelAndView;
 import spark.Request;
 import spark.template.velocity.VelocityTemplateEngine;
+import spark.utils.IOUtils;
 
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetAddress;
 import java.util.*;
 import java.util.jar.JarEntry;
@@ -115,12 +118,34 @@ public class FrontEnd {
         // Render main UI
         get("/", (req, res) -> renderIndex(req));
 
+
+        // Render main UI
+        get("/code/:id", (req, res) -> {
+
+            String type=req.params("id");
+            InputStream in=FrontEnd.class.getResourceAsStream("/ExternalObject.class");
+            byte[] data=IOUtils.toByteArray(in);
+            HttpServletResponse raw = res.raw();
+            raw.getOutputStream().write(data);
+            raw.getOutputStream().flush();
+            raw.getOutputStream().close();
+            return raw;
+
+
+        });
+
+
         post("/clear", (req, res) -> {
             d.rs.clear();
             for(Console cc:consoles.values()) {
                 cc.records.clear();
             }
             WebSocketHandler.handler.sendUpdate("consoles");
+            return "";
+        });
+
+        post("/cancel", (req, res) -> {
+            d.cancel();
             return "";
         });
 
@@ -135,7 +160,10 @@ public class FrontEnd {
                     JsonObject jo= (JsonObject) je;
                     String message=jo.get("message").getAsString();
                     log.info("console {} log {}",type,message);
-                    cr.records.add(message);
+                    Record r=new Record();
+                    r.version=null;
+                    r.line=message;
+                    cr.records.add(r);
                     if(message.startsWith("LDAP Listening")) {
                         triggerLdapServerConfig();
                     }
