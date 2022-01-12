@@ -1,0 +1,5 @@
+<table id="" class="table table-borderless table-sm w-auto">
+    #foreach($r in $c.records)
+    <tr><td><tt>$r</tt></td></tr>
+    #end
+</table>

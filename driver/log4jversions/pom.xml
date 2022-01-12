@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>driver</artifactId>
+        <groupId>com.sonatype.demo</groupId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>log4jversions</artifactId>
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>2.0</module>
+        <module>2.1</module>
+        <module>2.2</module>
+        <module>2.3</module>
+        <module>2.4</module>
+        <module>2.5</module>
+        <module>2.6</module>
+        <module>2.7</module>
+        <module>2.8</module>
+        <module>2.9.0</module>
+        <module>2.10.0</module>
+        <module>2.11.0</module>
+        <module>2.12.0</module>
+        <module>2.13.0</module>
+        <module>2.14.0</module>
+        <module>2.15.0</module>
+        <module>2.16.0</module>
+        <module>2.17.1</module>
+    </modules>
+
+
+
+</project>

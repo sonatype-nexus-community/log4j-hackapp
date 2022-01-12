@@ -1,0 +1,12 @@
+
+.Abash {
+  background-color: black;
+  color: white;
+}
+
+.loggers {
+  width: 100%;
+  display: inline-block;
+  overflow:scroll;
+}
+

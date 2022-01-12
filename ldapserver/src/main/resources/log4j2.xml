@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="INFO" >
+  <Appenders>
+    <Http name="web" url="http://localhost:8080/console/ldap">
+          <Property name="X-Java-Runtime" value="$${java:runtime}" />
+          <JsonLayout properties="true"/>
+
+        </Http>
+  <Console name="ConsoleAppender" target="SYSTEM_OUT">
+            <PatternLayout pattern="%-5level :: %msg%n" />
+        </Console>
+</Appenders>
+<Loggers>
+  <Root level="info">
+    <AppenderRef ref="web"/>
+    <AppenderRef ref="ConsoleAppender"/>
+  </Root>
+</Loggers>
+</Configuration>

