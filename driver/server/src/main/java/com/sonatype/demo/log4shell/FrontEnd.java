@@ -13,9 +13,11 @@ import spark.template.velocity.VelocityTemplateEngine;
 import spark.utils.IOUtils;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.*;
 import java.util.jar.JarEntry;
 
@@ -26,11 +28,12 @@ public class FrontEnd {
     private static Logger log= LoggerFactory.getLogger(FrontEnd.class);
     private static Map<String,Console> consoles=new HashMap<>();
     private static String ldapaddr;
-
+    // if running local mount the runner and log jar seperately
+    public static final boolean inDockerContainer =(new File("/.dockerenv")).exists();
 
     private static Driver d;
 
-    public static void main(String args[] ) throws IOException {
+    public static void main(String args[] ) throws Exception {
 
         log.info("server started");
         Console c=new Console("ldap");
@@ -38,10 +41,7 @@ public class FrontEnd {
         c=new Console("dns");
         consoles.put("dns",c);
 
-        ldapaddr=InetAddress.getLocalHost().getHostAddress();
-
         d=new Driver();
-
 
         exception(Exception.class, (e, req, res) -> e.printStackTrace());
 
@@ -51,7 +51,6 @@ public class FrontEnd {
         staticFiles.location("/public");
 
         port(8080);
-
 
         before((req, res) -> {
                     log.info("request {}",req.pathInfo());
@@ -202,7 +201,7 @@ public class FrontEnd {
             public void run() {
                 try {
                     Thread.sleep(1000);
-                    LdapServerUploader loader=new LdapServerUploader(ldapaddr);
+                    LdapServerUploader loader=new LdapServerUploader();
                     loader.addObjects();
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -226,7 +225,17 @@ public class FrontEnd {
         Map<String, Object> model = new HashMap<>();
         Collection<LogVersion> versions=d.logVersions.values();
         model.put("versions",versions);
-        model.put("ldapaddr",ldapaddr);
+
+        if(inDockerContainer) {
+            model.put("ldapaddr","ldap.dev");
+        } else {
+            try {
+                model.put("ldapaddr",InetAddress.getLocalHost().getHostAddress());
+            } catch (UnknownHostException e) {
+                model.put("ldapaddr","localhost");
+
+            }
+        }
         model.put("properties",d.vmProperties.values());
         model.put("levels",d.javaVersions.values());
         model.put("servers",consoles.values());

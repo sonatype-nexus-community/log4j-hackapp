@@ -7,7 +7,7 @@ public class LogVersion {
 
     public String version;
     public String location;
-    public boolean active=true;
+    public boolean active=false;
 
     public String toString() {
         return version+"::"+location;

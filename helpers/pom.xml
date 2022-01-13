@@ -9,12 +9,11 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>driver</artifactId>
-    <packaging>pom</packaging>
-    <modules>
-        <module>log4jversions</module>
-        <module>server</module>
-        <module>runner</module>
-    </modules>
+    <artifactId>helpers</artifactId>
+
+    <properties>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
+    </properties>
 
 </project>

@@ -108,10 +108,12 @@ public class ResultsStore {
     }
 
     public void addJavaVersion(JavaVersion jv) {
-        Console  c=byJavaVersion.get(jv);
-        if(c==null) {
-            c=new Console(jv.version);
-            byJavaVersion.put(jv,c);
+        if(jv.present) {
+            Console c = byJavaVersion.get(jv);
+            if (c == null) {
+                c = new Console(jv.version);
+                byJavaVersion.put(jv, c);
+            }
         }
     }
 

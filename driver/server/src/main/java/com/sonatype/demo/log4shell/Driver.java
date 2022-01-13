@@ -21,17 +21,27 @@ import java.util.stream.Stream;
 
 public class Driver {
 
-    private static final String suffix="-jar-with-dependencies.jar";
+    private static final String fatjars ="-jar-with-dependencies.jar";
+    public static final String ANYJAR = ".jar";
 
     private static Logger log= LoggerFactory.getLogger(FrontEnd.class);
+
+    private String runnerPath;
+
     public Map<String, LogVersion> logVersions =new HashMap<>();
     public Map<String, JavaVersion> javaVersions =new HashMap<>();
     public Map<String, SystemProperty> vmProperties =new HashMap<>();
+    private Set<String> localImages=null;
     private BlockingQueue<DriverConfig> queue=new LinkedBlockingQueue<>();
-    public ResultsStore rs=new ResultsStore(this);
-    private static boolean local=true;
 
-    public Driver() throws IOException {
+    public ResultsStore rs=new ResultsStore(this);
+
+
+    public Driver() throws Exception {
+
+
+        localImages=getLocalDockerImages();
+
         loadJarPaths();
         loadJavaLevels();
         loadVMProperties();
@@ -87,11 +97,18 @@ public class Driver {
     }
 
     private void loadJavaLevels() throws IOException {
+
         File config=new File("javalevels.txt");
         List<String> lines=Files.readAllLines(config.toPath());
+        boolean oneReady=false;
         for(String s:lines) {
             s=s.trim();
             JavaVersion jv=new JavaVersion(s);
+            jv.present=localImages.contains(s);
+            if(jv.present && javaVersions.isEmpty()) {
+                jv.active=true;
+                oneReady=true;
+            }
             javaVersions.put(jv.version,jv);
             rs.addJavaVersion(jv);
         }
@@ -132,6 +149,22 @@ public class Driver {
     private String[] execute(List<String> parameters) throws Exception {
 
 
+        List<String> data = runProcess(parameters);
+
+        Iterator<String> is=data.iterator();
+        while(is.hasNext()) {
+            String line=is.next();
+            if(line.startsWith("WARNING: sun.reflect.Reflection.getCallerClass is not supported")) {
+                is.remove();
+            }
+        }
+
+        log.info("resp {}",data);
+
+        return data.toArray(new String[0]);
+    }
+
+    private List<String> runProcess(List<String> parameters) throws IOException, InterruptedException {
         File logger=new File("/tmp/log.log");
         logger.delete();
 
@@ -145,18 +178,26 @@ public class Driver {
         log.info("process timeout = {} ",r);
 
         List<String> data=Files.readAllLines(logger.toPath());
+        return data;
+    }
 
-        Iterator<String> is=data.iterator();
-        while(is.hasNext()) {
-            String line=is.next();
-            if(line.startsWith("WARNING: sun.reflect.Reflection.getCallerClass is not supported")) {
-                is.remove();
-            }
-        }
+    private Set<String> getLocalDockerImages() throws Exception {
 
-        log.info("resp {}",data);
+        List<String> parameters=new LinkedList<>();
+        parameters.add("docker");
+        parameters.add("image");
+        parameters.add("ls");
+        parameters.add("--format");
+        parameters.add("{{.Repository}}:{{.Tag}}");
 
-        return data.toArray(new String[0]);
+        List<String> rawList=runProcess(parameters);
+
+        Set<String> images=new HashSet<>();
+        images.addAll(rawList);
+
+        log.info("loaded local image list {}",images);
+        return images;
+
     }
 
     private List<String> createConfig(DriverConfig dc) {
@@ -178,16 +219,18 @@ public class Driver {
         }
         parameters.add("-t");
 
-        // if running local mount the runner and log jar seperately
-        if(local) {
-            File pwd=new File(System.getProperty("user.dir"));
-            parameters.add("-v");
-            parameters.add(pwd.getAbsolutePath()+":/app");
-        } else {
+
+
+        if(FrontEnd.inDockerContainer) {
             parameters.add("--mount");
-            parameters.add("source=log4shellexplorer_logjars,target=/app");
+            parameters.add("source=log4shelldemo_logjars,target=/driver");
             parameters.add("--network");
-            parameters.add("log4shellexplorer_default");
+            parameters.add("log4shelldemo_default");
+        } else {
+            File pwd=new File(System.getProperty("user.dir"));
+            File driver=new File(pwd,"driver");
+            parameters.add("-v");
+            parameters.add(driver.getAbsolutePath()+":/driver");
         }
         // add image name
         parameters.add(dc.jv.version);
@@ -195,7 +238,7 @@ public class Driver {
         parameters.add("java");
         if(dc.vmargs!=null) for(SystemProperty v: dc.vmargs) parameters.add(v.toVMString());
 
-        String classpath="/app/runner/target/runner-1.0-SNAPSHOT.jar:/app/driver/log4jversions/"+dc.lv.version+"/target/"+dc.lv.version+"-jar-with-dependencies.jar";
+        String classpath=runnerPath+":"+dc.lv.location;
 
         parameters.add("-cp");
         parameters.add(classpath);
@@ -210,21 +253,56 @@ public class Driver {
 
     private void loadJarPaths() throws IOException {
 
-        File local=new File(System.getProperty("user.dir"));
+        File current=new File(System.getProperty("user.dir"));
 
-        log.info("searching for log jars in {}",local.getAbsolutePath());
-        if(local.getAbsolutePath().equals("/")) {
-            local = new File("/app");
-            log.info("in root - switching to {}", local.getAbsolutePath());
-        }
-        else {
-            local=new File(local,"driver");
-            local=new File(local,"log4jversions");
-            log.info("in dev mode - switching to {}", local.getAbsolutePath());
-        }
+        log.info("searching for log jars in {}",current.getAbsolutePath());
+        File driver=new File(current,"driver");
 
+        File log4jversions=new File(driver,"log4jversions");
+        List<Path> candidates = getCandidates(log4jversions, fatjars);
+        registerLog4JJars(current,candidates);
+
+
+        for(File k:driver.listFiles()) {
+            log.info("child {}",k.getAbsolutePath()) ;
+        }
+        File runner=new File(driver,"runner");
+        candidates = getCandidates(runner, ANYJAR);
+        Path r=candidates.get(0);
+        log.info("candidate runner path {}",r);
+        runnerPath=relLoc(current,r.toFile());
+        log.info("runner path {}",runnerPath);
+
+    }
+
+    private String relLoc(File first,File second) {
+        String a=first.getAbsolutePath().toString();
+        String b=second.getAbsolutePath().toString();
+        String rel=b.substring(a.length());
+        if(rel.startsWith("/")) rel=rel.substring(1);
+        return rel;
+    }
+    private void registerLog4JJars(File current,List<Path> candidates) {
+
+        for(Path p:candidates) {
+            p=p.toAbsolutePath();
+            File f=p.toFile();
+            String name=f.getName();
+            String version=name.substring(0,name.length()- fatjars.length());
+            LogVersion lv=new LogVersion();
+            if(logVersions.isEmpty()) lv.active=true;  // activate the first one only
+            lv.location=relLoc(current,f);
+            lv.version=version;
+            logVersions.put(version,lv);
+
+            log.info("log4j version {} = jar {}",version,lv.location);
+
+        }
+    }
+
+    private List<Path> getCandidates(File local,String suffix) throws IOException {
         List<Path> candidates;
-            Path path=local.toPath();
+        Path path= local.toPath();
         try (Stream<Path> pathStream = Files.find(path,
                 Integer.MAX_VALUE,
                 (p, basicFileAttributes) ->
@@ -232,21 +310,7 @@ public class Driver {
         ) {
             candidates = pathStream.collect(Collectors.toList());
         }
-
-        for(Path p:candidates) {
-                p=p.toAbsolutePath();
-                File f=p.toFile();
-                log.info("eval {}",f);
-                String name=f.getName();
-                String location= f.getAbsolutePath();
-                String version=name.substring(0,name.length()-suffix.length());
-                LogVersion lv=new LogVersion();
-                lv.active=true;
-                lv.location=location;
-                lv.version=version;
-                logVersions.put(version,lv);
-
-        }
+        return candidates;
     }
 
     public Set<String> getVersions() {
@@ -268,7 +332,7 @@ public class Driver {
 
         if(javaVersions.containsKey(javaID)) {
            JavaVersion jv=javaVersions.get(javaID);
-            jv.active=!jv.active;
+            if(jv.present)  jv.active=!jv.active;
             log.error("version id {} switched to {} ",javaID,jv.active);
         } else {
             log.error("version id {} does not exist",javaID);

@@ -12,8 +12,8 @@
     <modules>
         <module>application</module>
         <module>driver</module>
-        <module>runner</module>
         <module>ldapserver</module>
+        <module>helpers</module>
     </modules>
 
     <properties>

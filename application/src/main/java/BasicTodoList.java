@@ -1,3 +1,4 @@
+import com.sonatype.demo.log4shelldemo.helpers.LogHelper;
 import model.*;
 import spark.*;
 import spark.template.velocity.*;
@@ -16,12 +17,15 @@ import org.slf4j.LoggerFactory;
  */
 public class BasicTodoList {
 
-   private static Logger logger = LoggerFactory.getLogger(BasicTodoList.class);
+   private static Logger logger;
 
 
 
     public static void main(String[] args) {
 
+        LogHelper.configLogging("log");
+
+        logger=LoggerFactory.getLogger(BasicTodoList.class);
 
         logger.info("application initiated");
         logger.info("java version {}",System.getProperty("java.version"));

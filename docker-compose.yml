@@ -1,0 +1,31 @@
+version: "3.9"
+volumes:
+  logjars:
+services:
+  ldap.dev:
+    build: ./ldapserver
+    image: log4jdemo-ldapserver
+    container_name: ldap.dev
+    links:
+      - server.dev
+    ports:
+      - '1389:1389'
+  application.dev:
+    container_name: application.dev
+    build: ./application
+    image: log4jdemo-application
+    ports:
+      - 9999:9999
+    links:
+      - server.dev
+  server.dev:
+    container_name: server.dev
+    command: ["docker"]
+    build: ./driver
+    image: log4jdemo-driver
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./javalevels.txt:/javalevels.txt
+      - logjars:/driver
+    ports:
+      - 8080:8080
