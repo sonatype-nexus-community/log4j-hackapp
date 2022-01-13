@@ -225,7 +225,7 @@ public class Driver {
             parameters.add("--mount");
             parameters.add("source=log4shelldemo_logjars,target=/driver");
             parameters.add("--network");
-            parameters.add("log4shelldemo_default");
+            parameters.add("log4shelldemo");
         } else {
             File pwd=new File(System.getProperty("user.dir"));
             File driver=new File(pwd,"driver");

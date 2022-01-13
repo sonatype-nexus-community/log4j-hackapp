@@ -1,6 +1,9 @@
 version: "3.9"
 volumes:
   logjars:
+networks:
+  default:
+    name: log4shelldemo
 services:
   ldap.dev:
     build: ./ldapserver
