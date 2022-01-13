@@ -31,6 +31,35 @@ docker-compose up
 Now open a browser to [localhost:8080](http:localhost:8080)
 
 
+## What you see 
+
+![main](docs/gitpages/images/fullscreen.png) 
+
+In the top left is the application.  This is a slightly modified version of a cool spark java [app](https://github.com/tipsy/spark-intercooler) It's been modified to send log4J2 logging requests  to the controlling server via an http post.  
+
+On the top right are a series of tabs that provide the console view for each Java runtime present.  You can move between them by selecting the tab as appropriate
+As log requests from the application arrive they are executed by specific Java/log4j combination and the resulting output is added to the relevent console.
+You can see the log4j version number on the left of the console in smaller numbers. The   small badges with a 1 or a 2 in them indicate that a particular property was active. 
+Below the Java consoles are two more that are specifically to show the consoles for the LDAP server and DNS server respectfuly.  Important information from these servers will show what can be happening when a log4j request is made.  
+
+Below the application view on the left is a a series of hints.  Try cut'n'pasting them into the application 
+Below that are the configuration options for which log4j version and which java runtime to use. Picking more than one will cause the tool to run all the combinations
+Below the config options are two buttons (not shown) that should be self evident in their purpose
+
+
+# what to do 
+
+Type something innocuous into the application on the top left.  Something like *buy milk* and press enter.   See the output appear on the Java console (you might have to choose the right tab for the selected Java version).   
+
+Now try deleting the line. More log info appears.  
+
+Now try something more interesting.  perhaps cut'n'paste *${sys:java.version}* into the app instead.  If the log results are the same then ok.  If what is logged is not actually what you entered the line added to the console will have red highlighting. 
+
+Try selecting different versions of Java or log4j or turning on one or two of the properies listed (they can have an effect) What the output in the LDAP and DNS consoles to see if any important data leaks out.    
+
+
+
+
 ## How to change log4j versions
 
 To add new log4j versions copy an existing module under drivr/log4jversions and amend to the version your require. 
