@@ -28,11 +28,9 @@ public class Runner {
             for(int i=1;i<args.length;i++) {
                 String key=args[i];
                 if(p.containsKey(key)) {
-                    logger.warn(key+" !!= {}",p.getProperty(key));
+                    logger.warn("!!={}/{}",key,p.getProperty(key));
                 }
-                else {
-                    logger.error(key+" !!- missing");
-                }
+
 
             }
         }

@@ -30,6 +30,20 @@ docker-compose up
 
 Now open a browser to [localhost:8080](http:localhost:8080)
 
+## to stop
+
+stopping the compose setup incorrectly can leave dangling volumes around.
+Not usually a big deal but if you're changing the contents of the driver module tree
+things might not work exactly as expected.  
+
+Bring compose down with 
+```
+docker-compose down -v 
+```
+for extra bells and braces
+```
+docker-compose rm -v 
+```
 
 ## What you see 
 

@@ -1,10 +1,8 @@
 package com.sonatype.demo.log4shell;
 
-import org.apache.logging.log4j.util.Strings;
 import org.bitbucket.cowwoc.diffmatchpatch.DiffMatchPatch;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.*;
@@ -20,7 +18,7 @@ public class ResultsStore {
     public ResultsStore(Driver driver) throws IOException {
         d=driver;
         pw=new PrintWriter(new File("/tmp/results.csv"));
-        pw.print("java,log4j,mutated,message,result");
+        pw.print("java,log4j,actual_java,mutated,message,result");
         for(String s:d.vmProperties.keySet()) {
             pw.print(","+s);
         }
@@ -28,29 +26,35 @@ public class ResultsStore {
 
 
     }
-    public Console addResults(DriverConfig dc, String[] lines) {
+    public Console addResults(DriverConfig dc, String line) {
+        List<String> s=new LinkedList<>();
+        s.add(line);
+        return addResults(dc,s);
+    }
 
-        // store the actual data on disk
+    public Console addResults(DriverConfig dc, List<String> lines) {
 
-        Result r=new Result(dc,lines);
+
+        Result r=ResultsParser.parse(dc,lines);
         results.add(r);
 
 
         // create a console representation
         Console  c=byJavaVersion.get(dc.jv);
+
         if(c==null) throw new NullPointerException("missing console");
-        if(lines!=null) {
-          if(lines.length==1) {
+        if(r.lines!=null) {
+          if(r.lines.length==1) {
                 Record rec=new Record();
                 rec.version=dc.lv.version;
                 rec.propids =dc.getActivePropertyIDs();
-
-                if(lines[0].equals(dc.msg)) {
-                    rec.line=lines[0];
+                String l=lines.get(0);
+                if(l.equals(dc.msg)) {
+                    rec.line=l;
                 }
                 else {
                     r.mutated=true;
-                    LinkedList<DiffMatchPatch.Diff> diff = dmp.diffMain( dc.msg, lines[0],false);
+                    LinkedList<DiffMatchPatch.Diff> diff = dmp.diffMain( dc.msg, l,false);
                     StringBuilder sb=new StringBuilder();
                     for(DiffMatchPatch.Diff d:diff) {
                         switch(d.operation) {
@@ -66,7 +70,7 @@ public class ResultsStore {
             }
             else {
               r.mutated=true;
-              for (String l : lines) {
+              for (String l : r.lines) {
                   Record rec = new Record();
                   rec.version = dc.lv.version;
                   rec.line = "<span class=\"text-danger\">" + l + "</span>";
@@ -86,11 +90,13 @@ public class ResultsStore {
         pw.print(",");
         pw.print(r.config.lv.version);
         pw.print(",");
+        pw.print(r.reportingProperties.get("java.version"));
+        pw.print(",");
         pw.print(r.mutated);
         pw.print(",");
         pw.print("\""+r.config.msg+"\"");
         pw.print(",");
-        pw.print("\""+String.join("/",r.console)+"\"");
+        pw.print("\""+String.join("/",r.lines)+"\"");
         for(SystemProperty s:d.vmProperties.values()) {
             if(r.config.vmargs.contains(s)) {
                 pw.print(",true");

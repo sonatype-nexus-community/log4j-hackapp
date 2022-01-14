@@ -15,7 +15,6 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -40,7 +39,7 @@ public class Driver {
     public Driver() throws Exception {
 
 
-        localImages=getLocalDockerImages();
+        localImages=DockerProcessRunner.getLocalDockerImages();
 
         loadJarPaths();
         loadJavaLevels();
@@ -71,7 +70,7 @@ public class Driver {
                             dc.msg=dc.msg.substring(3);
                             driveJavaImages(dc);
                         } else {
-                            Console c=rs.addResults(dc,new String[]{dc.msg});
+                            Console c=rs.addResults(dc,dc.msg);
                             WebSocketHandler.handler.sendUpdate("console-"+c.handle+"-main");
                         }
                     } catch (InterruptedException e) {
@@ -84,11 +83,11 @@ public class Driver {
     }
 
     private void driveJavaImages(DriverConfig dc) {
-        List<String> dockerProcessConfig=createConfig(dc);
-        log.info("driver setup: {}",String.join(" ",dockerProcessConfig));
+
 
         try {
-            String[] results=execute(dockerProcessConfig);
+            DockerProcessRunner r=new DockerProcessRunner(runnerPath);
+            List<String> results=r.runLogger(dc);
             Console c=rs.addResults(dc,results);
             WebSocketHandler.handler.sendUpdate("console-"+c.handle+"-main");
         } catch (Exception e) {
@@ -140,115 +139,8 @@ public class Driver {
 
     }
 
-    /**
-
-     * @param parameters
-     * @return
-     * @throws Exception
-     */
-    private String[] execute(List<String> parameters) throws Exception {
 
 
-        List<String> data = runProcess(parameters);
-
-        Iterator<String> is=data.iterator();
-        while(is.hasNext()) {
-            String line=is.next();
-            if(line.startsWith("WARNING: sun.reflect.Reflection.getCallerClass is not supported")) {
-                is.remove();
-            }
-        }
-
-        log.info("resp {}",data);
-
-        return data.toArray(new String[0]);
-    }
-
-    private List<String> runProcess(List<String> parameters) throws IOException, InterruptedException {
-        File logger=new File("/tmp/log.log");
-        logger.delete();
-
-        ProcessBuilder processBuilder = new ProcessBuilder();
-        processBuilder.command(parameters);
-        processBuilder.redirectError(logger);
-        processBuilder.redirectOutput(logger);
-        Process process = processBuilder.start();
-        boolean r=process.waitFor(3, TimeUnit.SECONDS);
-
-        log.info("process timeout = {} ",r);
-
-        List<String> data=Files.readAllLines(logger.toPath());
-        return data;
-    }
-
-    private Set<String> getLocalDockerImages() throws Exception {
-
-        List<String> parameters=new LinkedList<>();
-        parameters.add("docker");
-        parameters.add("image");
-        parameters.add("ls");
-        parameters.add("--format");
-        parameters.add("{{.Repository}}:{{.Tag}}");
-
-        List<String> rawList=runProcess(parameters);
-
-        Set<String> images=new HashSet<>();
-        images.addAll(rawList);
-
-        log.info("loaded local image list {}",images);
-        return images;
-
-    }
-
-    private List<String> createConfig(DriverConfig dc) {
-
-
-        List<String> parameters=new LinkedList<>();
-        parameters.add("docker");
-        parameters.add("run");
-        parameters.add("--pull");
-        parameters.add("never");
-        parameters.add("--rm");
-        parameters.add("-e");
-        parameters.add("MODE=production");
-        parameters.add("-e");
-        try {
-            parameters.add("ADDR="+ InetAddress.getLocalHost());
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-        }
-        parameters.add("-t");
-
-
-
-        if(FrontEnd.inDockerContainer) {
-            parameters.add("--mount");
-            parameters.add("source=log4shelldemo_logjars,target=/driver");
-            parameters.add("--network");
-            parameters.add("log4shelldemo");
-        } else {
-            File pwd=new File(System.getProperty("user.dir"));
-            File driver=new File(pwd,"driver");
-            parameters.add("-v");
-            parameters.add(driver.getAbsolutePath()+":/driver");
-        }
-        // add image name
-        parameters.add(dc.jv.version);
-        // setup java launcher
-        parameters.add("java");
-        if(dc.vmargs!=null) for(SystemProperty v: dc.vmargs) parameters.add(v.toVMString());
-
-        String classpath=runnerPath+":"+dc.lv.location;
-
-        parameters.add("-cp");
-        parameters.add(classpath);
-        parameters.add(Runner.class.getCanonicalName());
-        parameters.add(dc.msg);
-
-        if(dc.props!=null) for(String p: dc.props) parameters.add(p);
-
-        return parameters;
-    }
 
 
     private void loadJarPaths() throws IOException {

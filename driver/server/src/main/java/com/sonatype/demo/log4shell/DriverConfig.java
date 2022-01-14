@@ -2,15 +2,17 @@ package com.sonatype.demo.log4shell;
 
 import lombok.extern.java.Log;
 
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 public class DriverConfig {
 
     JavaVersion jv;
     LogVersion lv;
     List<SystemProperty> vmargs;
-    String[] props;
+    Set<String> reportingProperties=new HashSet<>();
     String msg;
 
 
@@ -19,6 +21,7 @@ public class DriverConfig {
         this.lv=lv;
         this.msg=msg;
         this.vmargs=vmprops;
+        reportingProperties.add("java.version");
     }
 
     public Integer[] getActivePropertyIDs() {
