@@ -28,7 +28,7 @@ services:
     image: log4jdemo-driver
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./javalevels.txt:/javalevels.txt
+      - ./config:/config
       - logjars:/driver
     ports:
       - 8080:8080

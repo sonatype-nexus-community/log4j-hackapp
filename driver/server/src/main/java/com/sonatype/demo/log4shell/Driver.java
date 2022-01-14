@@ -23,6 +23,7 @@ public class Driver {
     private static final String fatjars ="-jar-with-dependencies.jar";
     public static final String ANYJAR = ".jar";
 
+
     private static Logger log= LoggerFactory.getLogger(FrontEnd.class);
 
     private String runnerPath;
@@ -31,6 +32,7 @@ public class Driver {
     public Map<String, JavaVersion> javaVersions =new HashMap<>();
     public Map<String, SystemProperty> vmProperties =new HashMap<>();
     private Set<String> localImages=null;
+    public Map<Integer,Hint> hints=new HashMap<>();
     private BlockingQueue<DriverConfig> queue=new LinkedBlockingQueue<>();
 
     public ResultsStore rs=new ResultsStore(this);
@@ -40,9 +42,10 @@ public class Driver {
 
 
         localImages=DockerProcessRunner.getLocalDockerImages();
-
+        File config=new File("config");
         loadJarPaths();
-        loadJavaLevels();
+        loadJavaLevels(config);
+        loadHints(config);
         loadVMProperties();
         launcherRUnner();
     }
@@ -95,9 +98,9 @@ public class Driver {
         }
     }
 
-    private void loadJavaLevels() throws IOException {
+    private void loadJavaLevels(File c) throws IOException {
 
-        File config=new File("javalevels.txt");
+        File config=new File(c,"javalevels.txt");
         List<String> lines=Files.readAllLines(config.toPath());
         boolean oneReady=false;
         for(String s:lines) {
@@ -119,6 +122,23 @@ public class Driver {
 
     }
 
+
+
+    private void loadHints(File c) throws IOException {
+
+        File config=new File(c,"hints.txt");
+        List<String> lines=Files.readAllLines(config.toPath());
+        for(String s:lines) {
+            s=s.trim();
+            Hint h=new Hint();
+            h.hint=s;
+            h.id=hints.size()+1;
+            hints.put(h.id,h);
+        }
+        log.info("loaded {} hints",hints.size());
+
+
+    }
  public  void drive(String logMsg) {
         log.info("drive log4j / jvm combinations");
         List<SystemProperty> props=new LinkedList<>();

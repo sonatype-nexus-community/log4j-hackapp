@@ -68,6 +68,13 @@ public class FrontEnd {
             return renderTemplate("velocity/versions.vm",model);
         });
 
+        get("/views/hints",  (req, res) -> {
+
+            Map<String, Object> model = new HashMap<>();
+            model.put("hints",d.hints.values());
+            return renderTemplate("velocity/hints.vm",model);
+        });
+
         get("/views/javalevels",  (req, res) -> {
             Map<String, Object> model = new HashMap<>();
             model.put("levels",d.javaVersions.values());
@@ -239,6 +246,7 @@ public class FrontEnd {
         model.put("properties",d.vmProperties.values());
         model.put("levels",d.javaVersions.values());
         model.put("servers",consoles.values());
+        model.put("hints",d.hints.values());
         model.put("consoles",d.rs.byJavaVersion.values());
 
         return renderTemplate("velocity/index.vm", model);

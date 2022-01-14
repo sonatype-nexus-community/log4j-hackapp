@@ -1,0 +1,5 @@
+<ul class="list-group">
+#foreach($hint in $hints)
+    <li class="list-group-item">${hint.hint}</li>
+#end
+</ul>
