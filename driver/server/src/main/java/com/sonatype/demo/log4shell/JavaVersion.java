@@ -7,7 +7,6 @@ public class JavaVersion implements Comparable{
 
     public String version;
     public boolean active=false;
-    public boolean present=false;
 
     public JavaVersion(String version) {
         this.version=version;

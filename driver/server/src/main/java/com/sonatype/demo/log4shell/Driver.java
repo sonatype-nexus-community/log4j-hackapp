@@ -103,13 +103,17 @@ public class Driver {
         for(String s:lines) {
             s=s.trim();
             JavaVersion jv=new JavaVersion(s);
-            jv.present=localImages.contains(s);
-            if(jv.present && javaVersions.isEmpty()) {
-                jv.active=true;
-                oneReady=true;
+            boolean present=localImages.contains(s);
+            if(present) {
+                if (javaVersions.isEmpty()) {
+                    jv.active = true;
+                    oneReady = true;
+                }
+                javaVersions.put(jv.version, jv);
+                rs.addJavaVersion(jv);
+            } else{
+                log.warn("Specified Java Image {} is not present in local cache ",s);
             }
-            javaVersions.put(jv.version,jv);
-            rs.addJavaVersion(jv);
         }
 
 
@@ -224,7 +228,7 @@ public class Driver {
 
         if(javaVersions.containsKey(javaID)) {
            JavaVersion jv=javaVersions.get(javaID);
-            if(jv.present)  jv.active=!jv.active;
+
             log.error("version id {} switched to {} ",javaID,jv.active);
         } else {
             log.error("version id {} does not exist",javaID);
