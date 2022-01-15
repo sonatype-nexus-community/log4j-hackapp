@@ -9,7 +9,9 @@ import java.util.Properties;
 
 public class Runner {
 
- // -Dcom.sun.jndi.ldap.object.trustURLCodebase=true -Dcom.sun.jndi.rmi.object.trustURLCodebase=true
+    public static final String JDEMO_PROPS = "LOG4JDEMO_PROPS";
+
+    // -Dcom.sun.jndi.ldap.object.trustURLCodebase=true -Dcom.sun.jndi.rmi.object.trustURLCodebase=true
  //While RCE is not possible without these flags, you will still get pingback, in minecraft's example, allowing you to get the IP of everyone connected.
     public static void main(String[] args) {
 
@@ -19,23 +21,18 @@ public class Runner {
             return;
         }
 
+       String proplist=System.getenv(JDEMO_PROPS);
 
-        String msg=args[0];
-
-        if(args.length>1) {
+        if(proplist!=null) {
+            String[] propNames=proplist.split(" ");
             Properties p= System.getProperties();
-
-            for(int i=1;i<args.length;i++) {
-                String key=args[i];
+            for(String key:propNames) {
                 if(p.containsKey(key)) {
                     logger.warn("!!={}/{}",key,p.getProperty(key));
                 }
-
-
             }
         }
-
-
+        String msg=args[0];
 
         try {
 

@@ -82,8 +82,19 @@ public class DockerProcessRunner {
         parameters.add("--pull");
         parameters.add("never");
         parameters.add("--rm");
+
         parameters.add("-e");
         parameters.add("MODE=production");
+
+        // add the properties we want to check the values for
+        // these get reported by the runner in the output
+        // java.version is always set
+        if(dc.reportingProperties!=null) {
+            String elist=String.join(",",dc.reportingProperties);
+            parameters.add("-e");
+            parameters.add(Runner.JDEMO_PROPS+"="+elist);
+        }
+
         parameters.add("-e");
         try {
             parameters.add("ADDR="+ InetAddress.getLocalHost());
@@ -118,10 +129,7 @@ public class DockerProcessRunner {
         parameters.add(Runner.class.getCanonicalName());
         parameters.add(dc.msg);
 
-        // add the properties we want to check the values for
-        // these get reported by the runner in the output
-        // java.version is always set
-        if(dc.reportingProperties!=null) for(String p: dc.reportingProperties) parameters.add(p);
+
 
         return parameters;
     }
