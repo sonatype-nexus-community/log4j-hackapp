@@ -32,9 +32,17 @@ public class DockerProcessRunner {
         processBuilder.redirectError(logger);
         processBuilder.redirectOutput(logger);
         Process process = processBuilder.start();
-        boolean r=process.waitFor(3, TimeUnit.SECONDS);
+        boolean r=process.waitFor(30, TimeUnit.SECONDS);
+        if(process.isAlive()) {
+            process.destroy();
+            log.info("process continued beyond 10 seconds");
+        }
+
 
         List<String> data= Files.readAllLines(logger.toPath());
+
+        log.info("{} lines gathered from output",data.size());
+
         return data;
     }
 

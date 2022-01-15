@@ -43,6 +43,7 @@ public class Driver {
 
         localImages=DockerProcessRunner.getLocalDockerImages();
         File config=new File("config");
+        log.info(config.getAbsolutePath()+" == "+config.exists());
         loadJarPaths();
         loadJavaLevels(config);
         loadHints(config);
@@ -78,6 +79,9 @@ public class Driver {
                         }
                     } catch (InterruptedException e) {
                         e.printStackTrace();
+                    }
+                    if(queue.isEmpty()) {
+                        WebSocketHandler.handler.unmute();
                     }
                 }
             }
@@ -139,7 +143,10 @@ public class Driver {
 
 
     }
- public  void drive(String logMsg) {
+ public  int drive(String logMsg) {
+
+        int scheduled=0;
+
         log.info("drive log4j / jvm combinations");
         List<SystemProperty> props=new LinkedList<>();
         for(SystemProperty sp:vmProperties.values()) {
@@ -153,6 +160,7 @@ public class Driver {
                 for (JavaVersion jv : javaVersions.values()) {
                     if(jv.active){
                         DriverConfig dc=new DriverConfig(jv,lv,props,logMsg);
+                        scheduled++;
                         queue.add(dc);
 
                     }
@@ -160,6 +168,7 @@ public class Driver {
                 }
             }
         }
+        return scheduled;
 
     }
 
@@ -248,13 +257,20 @@ public class Driver {
 
         if(javaVersions.containsKey(javaID)) {
            JavaVersion jv=javaVersions.get(javaID);
-
+            jv.active=!jv.active;
             log.error("version id {} switched to {} ",javaID,jv.active);
         } else {
             log.error("version id {} does not exist",javaID);
         }
     }
 
+
+    public void toggleHintStatus(int hintID) {
+        if(hints.containsKey(hintID)) {
+            Hint h=hints.get(hintID);
+            h.active=!h.active;
+        }
+    }
     public void togglePropertyStatus(String key) {
 
         if(vmProperties.containsKey(key)) {
@@ -271,4 +287,30 @@ public class Driver {
         queue.clear();
 
     }
+
+    /*
+    Grid Test runs all active log / java / hint combos
+    The application is not involved;
+     */
+
+
+    public void runGridTest() {
+
+        log.info("run grid test");
+        int scheduled=0;
+
+        for(Hint h:hints.values()) {
+            if(h.active) {
+                log.info("hint scheduled {}",h.hint);
+              scheduled+=drive(":::"+h.hint);
+            }
+        }
+
+       log.info("Scheduled {} grid tests",scheduled);
+    }
+
+    public int queueSize() {
+        return queue.size();
+    }
+
 }

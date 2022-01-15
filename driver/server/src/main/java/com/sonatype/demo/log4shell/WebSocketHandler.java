@@ -10,6 +10,7 @@ import java.util.HashSet;
 public class WebSocketHandler {
 
     private Gson gson=new Gson();
+    private boolean muted=false;
 
     public static WebSocketHandler handler;
 
@@ -43,6 +44,8 @@ public class WebSocketHandler {
 
     private void publish(Object o) {
 
+        if(muted) return;
+
         String msg="";
         if(o==null) return;
         if(o instanceof  String) {
@@ -64,7 +67,17 @@ public class WebSocketHandler {
 
     public void sendUpdate(String target) {
 
-        String msg=("{'cmd':'update','target':'"+target+"' }").replace("'","\"");
-        publish(msg);
+
+            String msg = ("{'cmd':'update','target':'" + target + "' }").replace("'", "\"");
+            publish(msg);
+
+    }
+
+    public void mute() {
+        this.muted=true;
+    }
+
+    public void unmute() {
+        this.muted=false;
     }
 }

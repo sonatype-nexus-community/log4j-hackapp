@@ -1,6 +1,13 @@
 var socket = new WebSocket("ws://" + location.host + "/ws");
 
 
+function clickAll(cls) {
+
+var elements = document.getElementsByClassName(cls);
+       for(var i=0;i < elements.length;i++){
+         elements[i].click();
+       }
+}
 
 socket.onopen = function(event) {
 

@@ -1,5 +1,6 @@
 package com.sonatype.demo.log4shell;
 
+import lombok.Data;
 import lombok.extern.java.Log;
 
 import java.util.HashSet;
@@ -7,6 +8,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+@Data
 public class DriverConfig {
 
     JavaVersion jv;

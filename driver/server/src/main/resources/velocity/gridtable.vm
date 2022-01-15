@@ -1,0 +1,17 @@
+<table class="table">
+    <thead><tr>
+        <th>Java Required</th><th>Java Reported</th><th>Log4J</th><th>Message mutated</th><th>Message</th><th>Response</th>
+
+    </tr></thead>
+    <tbody>
+    #foreach($r in $results)
+    <tr><td>${r.config.jv.version}</td>
+        <td>${r.reportedJava()}</td>
+        <td>${r.config.lv.version}</td>
+        <td>${r.mutated}</td>
+        <td>${r.config.msg}</td>
+        <td><a href="/views/results/raw/${r.id}" target="_blank">raw</a></td>
+        <td>${r.getConsole()}</td></tr>
+    #end
+    </tbody>
+</table>

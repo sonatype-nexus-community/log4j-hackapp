@@ -9,20 +9,20 @@ import java.util.*;
 
 public class ResultsStore {
 
-    private final List<Result> results=new LinkedList<>();
-    private PrintWriter pw;
-    private DiffMatchPatch dmp = new DiffMatchPatch();
+   private final List<Result> results=new LinkedList<>();
+   // private PrintWriter pw;
+
     public Map<JavaVersion,Console> byJavaVersion=new TreeMap<>();
     private Driver d;
 
     public ResultsStore(Driver driver) throws IOException {
         d=driver;
-        pw=new PrintWriter(new File("/tmp/results.csv"));
-        pw.print("java,log4j,actual_java,mutated,message,result");
-        for(String s:d.vmProperties.keySet()) {
-            pw.print(","+s);
-        }
-        pw.println("");
+    //    pw=new PrintWriter(new File("/tmp/results.csv"));
+     //   pw.print("java,log4j,actual_java,mutated,message,result");
+      //  for(String s:d.vmProperties.keySet()) {
+      //      pw.print(","+s);
+      //  }
+      //  pw.println("");
 
 
     }
@@ -36,48 +36,16 @@ public class ResultsStore {
 
 
         Result r=ResultsParser.parse(dc,lines);
+        r.id=results.size()+1;
         results.add(r);
 
 
         // create a console representation
         Console  c=byJavaVersion.get(dc.jv);
 
-        if(c==null) throw new NullPointerException("missing console");
-        if(r.lines!=null) {
-          if(r.lines.length==1) {
-                Record rec=new Record();
-                rec.version=dc.lv.version;
-                rec.propids =dc.getActivePropertyIDs();
-                String l=lines.get(0);
-                if(l.equals(dc.msg)) {
-                    rec.line=l;
-                }
-                else {
-                    r.mutated=true;
-                    LinkedList<DiffMatchPatch.Diff> diff = dmp.diffMain( dc.msg, l,false);
-                    StringBuilder sb=new StringBuilder();
-                    for(DiffMatchPatch.Diff d:diff) {
-                        switch(d.operation) {
-                            case EQUAL: sb.append(d.text); break;
-                            case INSERT: sb.append("<span class=\"text-danger\">"+d.text+"</span>"); break;
-                         //   case DELETE: sb.append("??"+d.text+"??"); break;
 
-                        }
-                    }
-                    rec.line=sb.toString();
-                }
-                c.records.add(rec);
-            }
-            else {
-              r.mutated=true;
-              for (String l : r.lines) {
-                  Record rec = new Record();
-                  rec.version = dc.lv.version;
-                  rec.line = "<span class=\"text-danger\">" + l + "</span>";
-                  c.records.add(rec);
-              }
-          }
-        }
+        if(c==null) throw new NullPointerException("missing console");
+        c.addResult(dc,r);
 
 
         printResult(r);
@@ -86,6 +54,7 @@ public class ResultsStore {
     }
 
     private void printResult(Result r) {
+        /*
         pw.print(r.config.jv.version);
         pw.print(",");
         pw.print(r.config.lv.version);
@@ -106,6 +75,8 @@ public class ResultsStore {
         }
         pw.println("");
         pw.flush();
+        */
+
     }
 
     public Console getJavaVersionResults(JavaVersion v) {
@@ -128,5 +99,13 @@ public class ResultsStore {
         for(Console c:byJavaVersion.values()) {
             c.records.clear();
         }
+    }
+
+    public Result getEntry(int resultID) {
+        return results.get(resultID-1);
+    }
+
+    public List<Result> getResults() {
+        return results;
     }
 }

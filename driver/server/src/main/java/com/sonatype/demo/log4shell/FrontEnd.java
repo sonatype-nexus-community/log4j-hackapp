@@ -75,6 +75,15 @@ public class FrontEnd {
             return renderTemplate("velocity/hints.vm",model);
         });
 
+
+        get("/views/results/raw/:id",  (req, res) -> {
+
+            Map<String, Object> model = new HashMap<>();
+            Integer resultID=Integer.parseInt(req.params("id"));
+            model.put("raw",d.rs.getEntry(resultID).getLines());
+            return renderTemplate("velocity/raw.vm",model);
+        });
+
         get("/views/javalevels",  (req, res) -> {
             Map<String, Object> model = new HashMap<>();
             model.put("levels",d.javaVersions.values());
@@ -120,9 +129,20 @@ public class FrontEnd {
             return ""+d.vmProperties.get(property).active;
         });
 
+        put("/hint/:id/toggle", (req, res) -> {
+
+            String hintID=req.params("id");
+            Integer i=Integer.parseInt(hintID);
+            d.toggleHintStatus(i);
+            return ""+d.hints.get(i).active;
+        });
+
 
         // Render main UI
         get("/", (req, res) -> renderIndex(req));
+
+        // Render grid version
+        get("/grid", (req, res) -> renderGrid(req));
 
 
         // Render main UI
@@ -142,13 +162,25 @@ public class FrontEnd {
 
 
         post("/clear", (req, res) -> {
-            d.rs.clear();
-            for(Console cc:consoles.values()) {
-                cc.records.clear();
-            }
-            WebSocketHandler.handler.sendUpdate("consoles");
+            clearConsoles();
             return "";
         });
+
+        post("/gridtest", (req, res) -> {
+            log.info("grid test initiated");
+            clearConsoles();
+            WebSocketHandler.handler.mute();
+            d.runGridTest();
+            return "";
+        });
+
+
+        post("/gridcancel", (req, res) -> {
+            d.cancel();
+            WebSocketHandler.handler.unmute();
+            return "";
+        });
+
 
         post("/cancel", (req, res) -> {
             d.cancel();
@@ -198,6 +230,14 @@ public class FrontEnd {
 
 
 
+    }
+
+    private static void clearConsoles() {
+        d.rs.clear();
+        for (Console cc : consoles.values()) {
+            cc.records.clear();
+        }
+        WebSocketHandler.handler.sendUpdate("consoles");
     }
 
     private static void triggerLdapServerConfig() {
@@ -253,6 +293,33 @@ public class FrontEnd {
 
     }
 
+
+    private static String renderGrid(Request req) {
+        Map<String, Object> model = new HashMap<>();
+        Collection<LogVersion> versions=d.logVersions.values();
+        model.put("versions",versions);
+
+        if(inDockerContainer) {
+            model.put("ldapaddr","ldap.dev");
+        } else {
+            try {
+                model.put("ldapaddr",InetAddress.getLocalHost().getHostAddress());
+            } catch (UnknownHostException e) {
+                model.put("ldapaddr","localhost");
+
+            }
+        }
+        model.put("properties",d.vmProperties.values());
+        model.put("levels",d.javaVersions.values());
+        model.put("servers",consoles.values());
+        model.put("hints",d.hints.values());
+        model.put("queuesize",d.queueSize());
+        model.put("results",d.rs.getResults());
+
+
+        return renderTemplate("velocity/grid.vm", model);
+
+    }
     private static String renderTemplate(String template, Map model) {
         return new VelocityTemplateEngine().render(new ModelAndView(model, template));
     }

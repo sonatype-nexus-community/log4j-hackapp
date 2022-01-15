@@ -1,3 +1,4 @@
+<label></label><input type="checkbox"  onclick="clickAll('logversion')">click all</label>
 #foreach($version in $versions)
-<label><input type="checkbox" class="form-check-input toggle" ic-put-to="/version/${version.version}/toggle" #if($version.active)checked#end>${version.version}</label>
+<label><input type="checkbox" class="logversion form-check-input toggle" ic-put-to="/version/${version.version}/toggle" #if($version.active)checked#end>${version.version}</label>
 #end

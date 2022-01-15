@@ -1,0 +1,6 @@
+<label></label><input type="checkbox"  onclick="clickAll('loghint')">click all</label>
+#foreach($hint in $hints)
+<label><input type="checkbox" class="loghint form-check-input toggle" ic-put-to="/hint/${hint.id}/toggle"  #if($hint.active)checked#end>
+  ${hint.hint}
+</label>
+#end

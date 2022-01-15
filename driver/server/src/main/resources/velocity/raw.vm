@@ -1,0 +1,7 @@
+<table class="table">
+    <tbody>
+    #foreach($r in $raw)
+    <tr><td>${r}</td></tr></td></tr>
+    #end
+    </tbody>
+</table>
