@@ -1,0 +1,36 @@
+package com.sonatype.demo.log4shell;
+
+public enum ResultType {
+
+    UNKNOWN,
+    ERROR,
+    UNCHANGED,
+
+    FAILED_DIRECT_ENVVAR,
+    SUCESSFUL_DIRECT_ENVVAR,
+
+    FAILED_RCE,
+    SUCCESSFUL_RCE,
+    PARTIAL_RCE,
+
+    SUCCESSFUL_GADGET_CHAIN,
+    FAILED_GADGET_CHAIN,
+    PARTIAL_GADGET_CHAIN,
+
+    FAILED_JAVA_VERSION,
+    SUCESSFUL_JAVA_VERSION,
+
+    FAILED_DIRECT_LOG4JCONFIG,
+    SUCESSFUL_DIRECT_LOG4JCONFIG,
+
+    SUCCESSFUL_DIRECT_JAVA_CLASSPATH,
+    FAILED_DIRECT_JAVA_CLASSPATH,
+
+    SUCCESSFUL_HIDDEN_ATTACK,
+    FAILED_HIDDEN_ATTACK;
+
+
+    public String columnName() {
+        return this.name().replace("_"," ").toLowerCase();
+    }
+}

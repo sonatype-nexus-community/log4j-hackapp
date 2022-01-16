@@ -20,7 +20,7 @@ public class TodoDao {
     public static void add(Todo todo) {
 
 
-        logger.info("::: add {}",todo);
+        logger.info("add {}",todo);
 
         DATA.add(todo);
     }

@@ -15,13 +15,13 @@ public class DriverConfig {
     LogVersion lv;
     List<SystemProperty> vmargs;
     Set<String> reportingProperties=new HashSet<>();
-    String msg;
+    String[] msgs;
 
 
-    public DriverConfig(JavaVersion jv, LogVersion lv,List<SystemProperty> vmprops,String msg) {
+    public DriverConfig(JavaVersion jv, LogVersion lv,List<SystemProperty> vmprops,String msgs[]) {
         this.jv=jv;
         this.lv=lv;
-        this.msg=msg;
+        this.msgs=msgs;
         this.vmargs=vmprops;
         reportingProperties.add("java.version");
     }

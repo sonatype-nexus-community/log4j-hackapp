@@ -1,6 +1,7 @@
 package com.sonatype.demo.log4shell;
 
 import com.sonatype.demo.Runner;
+import com.sonatype.demo.log4shelldemo.helpers.DockerEnvironment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -105,7 +106,7 @@ public class DockerProcessRunner {
 
 
 
-        if(FrontEnd.inDockerContainer) {
+        if(DockerEnvironment.inDockerContainer) {
             parameters.add("--mount");
             parameters.add("source=log4shelldemo_logjars,target=/driver");
             parameters.add("--network");
@@ -127,7 +128,10 @@ public class DockerProcessRunner {
         parameters.add("-cp");
         parameters.add(classpath);
         parameters.add(Runner.class.getCanonicalName());
-        parameters.add(dc.msg);
+        for(String msg:dc.msgs) {
+            parameters.add(msg);
+        }
+
 
 
 

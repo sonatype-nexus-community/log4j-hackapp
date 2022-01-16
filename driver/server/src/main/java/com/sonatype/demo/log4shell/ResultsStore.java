@@ -1,83 +1,44 @@
 package com.sonatype.demo.log4shell;
 
-import org.bitbucket.cowwoc.diffmatchpatch.DiffMatchPatch;
-
-import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.*;
 
 public class ResultsStore {
 
    private final List<Result> results=new LinkedList<>();
-   // private PrintWriter pw;
-
-    public Map<JavaVersion,Console> byJavaVersion=new TreeMap<>();
-    private Driver d;
-
-    public ResultsStore(Driver driver) throws IOException {
-        d=driver;
-    //    pw=new PrintWriter(new File("/tmp/results.csv"));
-     //   pw.print("java,log4j,actual_java,mutated,message,result");
-      //  for(String s:d.vmProperties.keySet()) {
-      //      pw.print(","+s);
-      //  }
-      //  pw.println("");
+   private final Map<JavaVersion,Console> byJavaVersion=new TreeMap<>();
+   private final Map<String,SummaryRecord> summary=new TreeMap<>();
 
 
-    }
     public Console addResults(DriverConfig dc, String line) {
-        List<String> s=new LinkedList<>();
-        s.add(line);
-        return addResults(dc,s);
+        return addResults(dc,new String[]{line});
     }
 
-    public Console addResults(DriverConfig dc, List<String> lines) {
-
-
-        Result r=ResultsParser.parse(dc,lines);
-        r.id=results.size()+1;
-        results.add(r);
+    public Console addResults(DriverConfig dc, String[] lines) {
 
 
         // create a console representation
         Console  c=byJavaVersion.get(dc.jv);
-
-
         if(c==null) throw new NullPointerException("missing console");
-        c.addResult(dc,r);
 
+        List<Result> runList=ResultsParser.parse(dc,lines);
+        for(Result r:runList) {
+            r.id=results.size()+1;
+            results.add(r);
+            c.addResult(dc,r);
 
-        printResult(r);
+            String sk=r.jv.version+"/"+r.lv.version;
+            SummaryRecord sr=summary.get(sk);
+            if(sr==null) {
+                sr=new SummaryRecord(r.jv.version,r.lv.version);
+                summary.put(sk,sr);
+            }
+            sr.score[r.type.ordinal()]=sr.score[r.type.ordinal()]+1;
+        }
 
         return c;
     }
 
-    private void printResult(Result r) {
-        /*
-        pw.print(r.config.jv.version);
-        pw.print(",");
-        pw.print(r.config.lv.version);
-        pw.print(",");
-        pw.print(r.reportingProperties.get("java.version"));
-        pw.print(",");
-        pw.print(r.mutated);
-        pw.print(",");
-        pw.print("\""+r.config.msg+"\"");
-        pw.print(",");
-        pw.print("\""+String.join("/",r.lines)+"\"");
-        for(SystemProperty s:d.vmProperties.values()) {
-            if(r.config.vmargs.contains(s)) {
-                pw.print(",true");
-            } else {
-                pw.print(",false");
-            }
-        }
-        pw.println("");
-        pw.flush();
-        */
-
-    }
 
     public Console getJavaVersionResults(JavaVersion v) {
 
@@ -96,6 +57,7 @@ public class ResultsStore {
 
     public void clear() {
         results.clear();
+        summary.clear();
         for(Console c:byJavaVersion.values()) {
             c.records.clear();
         }
@@ -107,5 +69,17 @@ public class ResultsStore {
 
     public List<Result> getResults() {
         return results;
+    }
+
+    public Collection<Console> getConsoles() {
+        return byJavaVersion.values();
+    }
+
+    public Console getConsole(JavaVersion jv) {
+        return byJavaVersion.get(jv);
+    }
+
+    public Collection<SummaryRecord> getSummary() {
+            return summary.values();
     }
 }

