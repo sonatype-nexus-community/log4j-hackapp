@@ -1,8 +1,6 @@
 package com.sonatype.demo.log4shell;
 
 import com.sonatype.demo.Runner;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -110,7 +108,7 @@ public class ResultsParser {
                 rt=checkResults(resultLine);
                 if(rt==null) {
                     // could be a failed java.version check
-                    if(message.contains("${sys:java.version") && resultLine.contains("${sys:java.version")==false) rt=ResultType.SUCESSFUL_JAVA_VERSION;
+                    if(message.contains("${sys:java.version") && !resultLine.contains("${sys:java.version")) rt=ResultType.SUCESSFUL_JAVA_VERSION;
                     else if(message.equals(resultLine)) {
                         rt=ResultType.UNCHANGED;
                     } else{
@@ -132,7 +130,7 @@ public class ResultsParser {
         return results;
     }
 
-    private static ResultType checkResults(String resultLine[]) {
+    private static ResultType checkResults(List<String> resultLine) {
 
        for(String s:resultLine) {
            ResultType rt=checkResults(s.trim());
@@ -149,5 +147,5 @@ public class ResultsParser {
         }
         return null;
     }
-}
+
 }
