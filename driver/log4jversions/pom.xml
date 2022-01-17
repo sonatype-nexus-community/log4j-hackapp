@@ -13,7 +13,7 @@
     <packaging>pom</packaging>
 
     <modules>
-              <module>2.0</module>
+        <module>2.0</module>
         <module>2.0.1</module>
         <module>2.0.2</module>
         <module>2.1</module>

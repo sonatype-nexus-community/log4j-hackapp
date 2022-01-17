@@ -123,7 +123,7 @@ public class DockerProcessRunner {
         parameters.add("java");
         if(dc.vmargs!=null) for(SystemProperty v: dc.vmargs) parameters.add(v.toVMString());
 
-       String classpath=runnerPath+":"+dc.lv.location;
+       String classpath=runnerPath+":"+dc.lv.getLocation();
 
         parameters.add("-cp");
         parameters.add(classpath);

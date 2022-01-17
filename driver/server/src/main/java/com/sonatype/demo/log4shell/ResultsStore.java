@@ -27,10 +27,10 @@ public class ResultsStore {
             results.add(r);
             c.addResult(dc,r);
 
-            String sk=r.jv.version+"/"+r.lv.version;
+            String sk=r.jv.version+"/"+r.lv.getVersion();
             SummaryRecord sr=summary.get(sk);
             if(sr==null) {
-                sr=new SummaryRecord(r.jv.version,r.lv.version);
+                sr=new SummaryRecord(r.jv.version,r.lv.getVersion());
                 summary.put(sk,sr);
             }
             sr.score[r.type.ordinal()]=sr.score[r.type.ordinal()]+1;

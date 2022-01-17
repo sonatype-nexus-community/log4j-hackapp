@@ -22,8 +22,8 @@ public class Driver {
 
     private String runnerPath;
 
-    private final Map<String, LogVersion> logVersions =new HashMap<>();
-    private final Map<String, JavaVersion> javaVersions =new HashMap<>();
+    private final Map<Integer, LogVersion> logVersions =new TreeMap<>();
+    private final Map<String, JavaVersion> javaVersions =new LinkedHashMap<>();
     private final Map<String, SystemProperty> vmProperties =new HashMap<>();
     private final Map<String,Console> consoles=new HashMap<>();
     private final Set<String> localImages;
@@ -210,13 +210,12 @@ public class Driver {
             File f=p.toFile();
             String name=f.getName();
             String version=name.substring(0,name.length()- fatjars.length());
-            LogVersion lv=new LogVersion();
+            LogVersion lv=new LogVersion(version,relLoc(current,f));
             if(logVersions.isEmpty()) lv.active=true;  // activate the first one only
-            lv.location=relLoc(current,f);
-            lv.version=version;
-            logVersions.put(version,lv);
 
-            log.info("log4j version {} = jar {}",version,lv.location);
+            logVersions.put(lv.getId(),lv);
+
+            log.info("log4j version {} = jar {}",version,lv.getVersion());
 
         }
     }
@@ -234,11 +233,11 @@ public class Driver {
         return candidates;
     }
 
-    public Set<String> getVersions() {
+    public Set<Integer> getLogVersionIDs() {
         return logVersions.keySet();
     }
 
-    public boolean toggleVersionStatus(String versionID) {
+    public boolean toggleVersionStatus(int versionID) {
 
         if(logVersions.containsKey(versionID)) {
             LogVersion lv=logVersions.get(versionID);

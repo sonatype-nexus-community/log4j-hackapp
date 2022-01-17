@@ -30,7 +30,7 @@ public class Console {
 
             if(lines.length==1) {
                 Record rec=new Record();
-                rec.version=dc.lv.version;
+                rec.version=dc.lv.getVersion();
                 rec.propids =dc.getActivePropertyIDs();
 
                 String l=lines[0];
@@ -58,7 +58,7 @@ public class Console {
                 r.mutated=true;
                 for (String l : lines) {
                     Record rec = new Record();
-                    rec.version = dc.lv.version;
+                    rec.version = dc.lv.getVersion();
                     rec.line = "<span class=\"text-danger\">" + l + "</span>";
                     results.add(rec);
                 }

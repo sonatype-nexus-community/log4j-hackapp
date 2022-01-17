@@ -70,7 +70,7 @@ public class FrontEnd {
         });
 
 
-        put("/version/:id/toggle", (req, res) -> ""+ d.toggleVersionStatus(req.params("id")));
+        put("/version/:id/toggle", (req, res) -> ""+ d.toggleVersionStatus(Integer.parseInt(req.params("id"))));
 
         put("/java/:id/toggle", (req, res) -> {
 
