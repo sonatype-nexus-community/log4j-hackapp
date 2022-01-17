@@ -1,6 +1,6 @@
 package com.sonatype.demo.log4shell;
 
-import com.sonatype.demo.Runner;
+import com.sonatype.demo.log4shell.runner.Runner;
 
 import java.util.HashMap;
 import java.util.LinkedList;

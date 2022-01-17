@@ -1,10 +1,8 @@
-package com.sonatype.demo;
+package com.sonatype.demo.log4shell.runner;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.Properties;
 
 public class Runner {

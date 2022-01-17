@@ -1,12 +1,11 @@
 package com.sonatype.demo.log4shell;
 
-import com.sonatype.demo.Runner;
+import com.sonatype.demo.log4shell.runner.Runner;
 import com.sonatype.demo.log4shelldemo.helpers.DockerEnvironment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
