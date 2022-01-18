@@ -5,6 +5,7 @@ package com.sonatype.demo.log4shell;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.sonatype.demo.log4shelldemo.helpers.LdapServerUploader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.utils.IOUtils;

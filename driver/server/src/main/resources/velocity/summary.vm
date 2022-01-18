@@ -10,24 +10,23 @@
 
 <body>
 <h1>Grid Summary</h1>
-<table class="table">
-<thead>
-<tr>
-    <th>Image Name</th>
-    <th>Log4J Version</th>
-    #foreach($t in $types)
-        <th>$t.columnName()</th>
+<table class="table table-sm ">
+<thead class="table-dark">
+<tr><th colspan="2">Config</th>
+    #foreach($g in $groups.keySet())
+        <th>$g</th>
     #end
 </tr>
 </thead>
 <tbody>
+
 #foreach($sr in $summary)
     <tr>
         <td>$sr.jv</td>
         <td>$sr.lv</td>
-            #foreach($t in $types)
-                 <td>${sr.score[$t.ordinal()]}</td>
-            #end
+        #foreach($group in $groups)
+          <td class="bg-$sr.getStatus($group)">$sr.getResult($group)</td>
+        #end
     </tr>
 #end
 </tbody>

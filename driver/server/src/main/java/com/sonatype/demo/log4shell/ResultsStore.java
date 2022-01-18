@@ -1,40 +1,36 @@
 package com.sonatype.demo.log4shell;
 
-import java.io.IOException;
 import java.util.*;
 
 public class ResultsStore {
 
-   private final List<Result> results=new LinkedList<>();
+   private final List<TestResult> results=new LinkedList<>();
    private final Map<JavaVersion,Console> byJavaVersion=new TreeMap<>();
    private final Map<String,SummaryRecord> summary=new TreeMap<>();
 
 
-    public Console addResults(DriverConfig dc, String line) {
-        return addResults(dc,new String[]{line});
-    }
+    //public Console addResults(TestResult dc, String line) {
+     //   return addResults(dc,new String[]{line});
+   // }
 
-    public Console addResults(DriverConfig dc, String[] lines) {
+    public Console addResults(TestResult dc) {
 
 
         // create a console representation
         Console  c=byJavaVersion.get(dc.jv);
         if(c==null) throw new NullPointerException("missing console");
+            dc.id=results.size()+1;
+            results.add(dc);
+            c.addResult(dc);
 
-        List<Result> runList=ResultsParser.parse(dc,lines);
-        for(Result r:runList) {
-            r.id=results.size()+1;
-            results.add(r);
-            c.addResult(dc,r);
-
-            String sk=r.jv.version+"/"+r.lv.getVersion();
+            String sk=dc.jv.version+"/"+dc.lv.getVersion();
             SummaryRecord sr=summary.get(sk);
             if(sr==null) {
-                sr=new SummaryRecord(r.jv.version,r.lv.getVersion());
+                sr=new SummaryRecord(dc.jv.version,dc.lv.getVersion());
                 summary.put(sk,sr);
             }
-            sr.score[r.type.ordinal()]=sr.score[r.type.ordinal()]+1;
-        }
+            sr.score[dc.type.ordinal()]=sr.score[dc.type.ordinal()]+1;
+
 
         return c;
     }
@@ -63,11 +59,11 @@ public class ResultsStore {
         }
     }
 
-    public Result getEntry(int resultID) {
+    public TestResult getEntry(int resultID) {
         return results.get(resultID-1);
     }
 
-    public List<Result> getResults() {
+    public List<TestResult> getResults() {
         return results;
     }
 

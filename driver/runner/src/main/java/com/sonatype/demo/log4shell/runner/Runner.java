@@ -3,12 +3,23 @@ package com.sonatype.demo.log4shell.runner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Properties;
+import java.util.*;
 
 public class Runner {
 
     public static final String JDEMO_PROPS = "LOG4JDEMO_PROPS";
-    public static final String MSG_START_LINE = "--------------------";
+
+    public static final String RUNNER_MESSAGE_SEPERATOR = "-- Runner Message ---------------";
+    public static final String RUNNER_PROPERTY = "-- Runner Property ---------------";
+
+    public static final String MSG_SELECTOR = "msg";
+    public static final String REPORT_SELECTOR = "report";
+    public static final String LOG_SELECTOR = "log";
+
+    public static final String REPORT_CMD = "--"+REPORT_SELECTOR;
+    public static final String MSG_CMD = "--"+MSG_SELECTOR;
+    public static final String LOG_CMD = "--"+LOG_SELECTOR;
+
 
     // -Dcom.sun.jndi.ldap.object.trustURLCodebase=true -Dcom.sun.jndi.rmi.object.trustURLCodebase=true
  //While RCE is not possible without these flags, you will still get pingback, in minecraft's example, allowing you to get the IP of everyone connected.
@@ -20,22 +31,52 @@ public class Runner {
             return;
         }
 
-       String proplist=System.getenv(JDEMO_PROPS);
+        Map<String, List<String>> paramters=parseParams(args);
 
-        if(proplist!=null) {
-            String[] propNames=proplist.split(" ");
+       List<String> propList=paramters.get(REPORT_SELECTOR);
+
+        if(propList!=null) {
+
             Properties p= System.getProperties();
-            for(String key:propNames) {
+            for(String key:propList) {
                 if(p.containsKey(key)) {
-                    logger.warn("!!={}/{}",key,p.getProperty(key));
+                    System.out.println(RUNNER_PROPERTY+" "+key+"!!="+p.getProperty(key));
+                } else {
+                    System.out.println(RUNNER_PROPERTY+" "+key+"!!?");
                 }
             }
         }
 
-        for(String msg:args) {
-            logger.info(MSG_START_LINE);
+        List<String> msgs=paramters.get(MSG_SELECTOR);
+        for(String msg:msgs) {
+            System.out.println(RUNNER_MESSAGE_SEPERATOR+" "+msg);
             logger.info(msg);
         }
 
+    }
+
+    static Map<String, List<String>> parseParams(String[] args) {
+
+        Map<String, List<String>> results=new HashMap<>();
+        String type=MSG_SELECTOR;
+        List<String> entries=new LinkedList<>();
+        results.put(type,entries);
+
+        for(String s:args) {
+
+            if(s.startsWith("--")) {
+                type=s.substring(2);
+                entries=results.get(type);
+                if(entries==null) {
+                    entries=new LinkedList<>();
+                    results.put(type,entries);
+                }
+
+            } else {
+                entries.add(s);
+            }
+        }
+
+        return results;
     }
 }

@@ -23,7 +23,6 @@ services:
       - server.dev
   server.dev:
     container_name: server.dev
-    command: ["docker"]
     build: ./driver
     image: log4jdemo-driver
     volumes:

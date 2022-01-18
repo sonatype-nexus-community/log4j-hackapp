@@ -23,12 +23,13 @@ public class Driver {
     private String runnerPath;
 
     private final Map<Integer, LogVersion> logVersions =new TreeMap<>();
+    private final Map<String, LogVersion> logVersionsByName =new TreeMap<>();
     private final Map<String, JavaVersion> javaVersions =new LinkedHashMap<>();
     private final Map<String, SystemProperty> vmProperties =new HashMap<>();
     private final Map<String,Console> consoles=new HashMap<>();
     private final Set<String> localImages;
     private final Map<Integer,Hint> hints=new HashMap<>();
-    private final BlockingQueue<DriverConfig> queue=new LinkedBlockingQueue<>();
+    private final BlockingQueue<JavaVersionTestConfig> queue=new LinkedBlockingQueue<>();
 
     public final ResultsStore rs=new ResultsStore();
 
@@ -48,7 +49,7 @@ public class Driver {
         loadJavaLevels(config);
         loadHints(config);
         loadVMProperties();
-        launcherRUnner();
+        launcherRunner();
     }
 
     private void loadVMProperties() {
@@ -60,7 +61,10 @@ public class Driver {
         p.id=vmProperties.size();
     }
 
-    private void launcherRUnner() {
+    /*
+     Start the thread that deals with process requests
+     */
+    private void launcherRunner() {
 
         Thread t=new Thread(() -> {
             while(true) {
@@ -77,14 +81,36 @@ public class Driver {
         t.start();
     }
 
-    private void driveJavaImages(DriverConfig dc) {
+    /*
+    Takes the request group test and converts into an actual
+    docker and java command
+
+     */
+    private void driveJavaImages(JavaVersionTestConfig gdc) {
 
 
         try {
+            //create a launcher
             DockerProcessRunner r=new DockerProcessRunner(runnerPath);
-            List<String> results=r.runLogger(dc);
-            Console c=rs.addResults(dc,results.toArray(new String[0]));
-            WebSocketHandler.handler.sendUpdate("console-"+c.handle+"-main");
+
+            // run and collect results keyd by log id
+            ResultSet groupResults=r.runLogger(gdc);
+
+            // for each result entry add the results to the results store
+            // and update any browsers that consoles have changed
+
+            for(String v:groupResults.logVersionNames()) {
+                LogVersion lv = logVersionsByName.get(v);
+                for(String premsg:groupResults.getVersionMessages(v)) {
+                   TestResult results=groupResults.getResults(v,premsg);
+                   results.jv=gdc.getJavaVersion();
+                   results.lv=lv;
+                   results.setType(ResultTypeChecker.getResponseType(premsg,results.getResults()));
+                   Console c = rs.addResults(results);
+                    WebSocketHandler.handler.sendUpdate("console-" + c.handle + "-main");
+                }
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -133,10 +159,12 @@ public class Driver {
     }
 
     public  int drive(String logMsg) {
-        return drive(new String[]{logMsg});
+        List<String> s=new LinkedList<>();
+        s.add(logMsg);
+        return drive(s);
     }
 
- public  int drive(String[] logMsgs) {
+ public  int drive(List<String> logMsgs) {
 
         int scheduled=0;
 
@@ -148,19 +176,23 @@ public class Driver {
             }
         }
 
+        List<LogVersion> active=new LinkedList<>();
         for(LogVersion lv:logVersions.values()) {
             if(lv.active) {
-                for (JavaVersion jv : javaVersions.values()) {
-                    if(jv.active){
-                        DriverConfig dc=new DriverConfig(jv,lv,props,logMsgs);
-                        scheduled++;
-                        queue.add(dc);
-
-                    }
-
-                }
+                active.add(lv);
             }
         }
+
+
+     for (JavaVersion jv : javaVersions.values()) {
+         if(jv.active){
+             JavaVersionTestConfig gdc=new JavaVersionTestConfig(jv,active,props,logMsgs);
+             scheduled+=active.size();
+             queue.add(gdc);
+
+         }
+
+     }
         return scheduled;
 
     }
@@ -214,6 +246,7 @@ public class Driver {
             if(logVersions.isEmpty()) lv.active=true;  // activate the first one only
 
             logVersions.put(lv.getId(),lv);
+            logVersionsByName.put(lv.getVersion(),lv);
 
             log.info("log4j version {} = jar {}",version,lv.getVersion());
 
@@ -309,7 +342,7 @@ public class Driver {
             }
         }
 
-        scheduled+=drive(msgs.toArray(new String[0]));
+        scheduled+=drive(msgs);
 
        log.info("Scheduled {} grid tests",scheduled);
     }

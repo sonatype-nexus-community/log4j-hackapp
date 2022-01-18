@@ -22,24 +22,24 @@ public class Console {
                 .toLowerCase();
     }
 
-    public List<Record> toRecords(DriverConfig dc,Result r) {
+    public List<Record> toRecords(TestResult dc) {
 
         List<Record> results=new LinkedList<>();
-        String lines[]=r.getLines();
+        List<String> lines=dc.getResults();
         if(lines!=null) {
 
-            if(lines.length==1) {
+            if(lines.size()==1) {
                 Record rec=new Record();
                 rec.version=dc.lv.getVersion();
                 rec.propids =dc.getActivePropertyIDs();
 
-                String l=lines[0];
-                if(l.equals(r.logMsg)) {
+                String l=lines.get(0).trim();
+                if(l.equals(dc.getLogMsg().trim())) {
                     rec.line=l;
                 }
                 else {
-                    r.mutated=true;
-                    LinkedList<DiffMatchPatch.Diff> diff = dmp.diffMain(r.logMsg, l,false);
+                    dc.mutated=true;
+                    LinkedList<DiffMatchPatch.Diff> diff = dmp.diffMain(dc.getLogMsg(), l,false);
                     StringBuilder sb=new StringBuilder();
                     for(DiffMatchPatch.Diff d:diff) {
                         switch(d.operation) {
@@ -55,7 +55,7 @@ public class Console {
                results.add(rec);
             }
             else {
-                r.mutated=true;
+                dc.mutated=true;
                 for (String l : lines) {
                     Record rec = new Record();
                     rec.version = dc.lv.getVersion();
@@ -68,11 +68,11 @@ public class Console {
         return results;
 
     }
-    public void addResult(DriverConfig dc,Result r) {
+    public void addResult(TestResult dc) {
 
-        List<Record> results=toRecords(dc,r);
+        List<Record> results=toRecords(dc);
         records.addAll(results);
-        r.console=results;
+         dc.console=results;
 
     }
 }

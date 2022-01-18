@@ -12,4 +12,5 @@ public class Record {
     public String line;
     public Integer[] propids =new Integer[0];
     public boolean mutated;
+
 }

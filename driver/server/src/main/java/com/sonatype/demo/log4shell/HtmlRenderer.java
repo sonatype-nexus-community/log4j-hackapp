@@ -5,14 +5,18 @@ import spark.ModelAndView;
 import spark.template.velocity.VelocityTemplateEngine;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+
+import static com.sonatype.demo.log4shell.ResultType.*;
 
 public class HtmlRenderer {
 
     public static final String LDAPADDR = "ldapaddr";
     private final Driver d;
+    static Map<String,ResultType[]> summaryGroups=summaryHeadings();
+    static List<ResultType> summaryColumns=genSummaryColumns(summaryGroups);
+
+
     public HtmlRenderer(Driver d) {
         this.d=d;
     }
@@ -46,7 +50,7 @@ public class HtmlRenderer {
     public String renderRawResults(int resultID) {
 
         Map<String, Object> model = new HashMap<>();
-        model.put("raw",d.rs.getEntry(resultID).getLines());
+        model.put("raw",d.rs.getEntry(resultID).getResults());
         return renderTemplate("velocity/raw.vm",model);
     }
 
@@ -56,6 +60,8 @@ public class HtmlRenderer {
         Map<String, Object> model = new HashMap<>();
         model.put("types",ResultType.values());
         model.put("summary",d.rs.getSummary());
+        model.put("groups",summaryGroups);
+        model.put("columns",summaryColumns);
         return renderTemplate("velocity/summary.vm",model);
     }
 
@@ -121,4 +127,35 @@ public class HtmlRenderer {
         model.put("c",cq);
         return renderTemplate("velocity/console.vm",model);
     }
+
+
+    private static Map<String,ResultType[]> summaryHeadings() {
+
+        Map<String,ResultType[]> r=new LinkedHashMap<>();
+        r.put("general",new ResultType[]{UNKNOWN,ERROR,UNCHANGED});
+        r.put("prevent force log of envar",new ResultType[]{FAILED_LOG_ENVVAR, SUCCESSFUL_LOG_ENVVAR});
+        r.put("prevent force log Java version",new ResultType[]{FAILED_LOG_JAVA_VERSION, SUCCESSFUL_LOG_ENVVAR});
+        r.put("prevent force log of Java classpath",new ResultType[]{FAILED_LOG_JAVA_CLASSPATH, SUCCESSFUL_LOG_JAVA_CLASSPATH});
+        r.put("prevent force log of log4j config",new ResultType[]{FAILED_LOG_LOG4JCONFIG, SUCCESSFUL_LOG_LOG4JCONFIG});
+        r.put("prevent transmit Java version",new ResultType[]{FAILED_TRANSMIT_JAVA_VERSION,PARTIAL_TRANSMIT_JAVA_VERSION,SUCCESSFUL_TRANSMIT_JAVA_VERSION});
+        r.put("prevent gadget chain attack",new ResultType[]{FAILED_GADGET_CHAIN,PARTIAL_GADGET_CHAIN,SUCCESSFUL_GADGET_CHAIN});
+        r.put("prevent RCE attack",new ResultType[]{FAILED_RCE,PARTIAL_RCE,SUCCESSFUL_RCE});
+        r.put("prevent hidden attack",new ResultType[]{FAILED_HIDDEN_ATTACK,FAILED_HIDDEN_ATTACK});
+
+        return r;
+
+
+    }
+
+
+    private static List<ResultType> genSummaryColumns(Map<String, ResultType[]> summaryGroups) {
+        List<ResultType> results=new LinkedList<>();
+        for(ResultType[] r:summaryGroups.values()) {
+            for(ResultType rt:r) {
+                results.add(rt);
+            }
+        }
+        return results;
+    }
+
 }
