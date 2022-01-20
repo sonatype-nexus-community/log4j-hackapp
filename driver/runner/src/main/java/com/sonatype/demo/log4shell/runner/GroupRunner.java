@@ -39,7 +39,7 @@ public class GroupRunner {
             app.addAll(messages);
 
             System.out.println(RUNNER_GROUP_SEPERATOR+" "+version);
-            ProcessLauncher.javaLaunch(myCp,Runner.class.getCanonicalName(),null,app);
+            ProcessLauncher.javaLaunch(myCp,Runner.class.getCanonicalName(),paramters.get(PROPERTIES_SELECTOR),app);
         }
 
 

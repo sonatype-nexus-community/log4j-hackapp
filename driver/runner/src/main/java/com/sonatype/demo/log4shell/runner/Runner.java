@@ -15,10 +15,12 @@ public class Runner {
     public static final String MSG_SELECTOR = "msg";
     public static final String REPORT_SELECTOR = "report";
     public static final String LOG_SELECTOR = "log";
+    public static final String PROPERTIES_SELECTOR = "properties";
 
     public static final String REPORT_CMD = "--"+REPORT_SELECTOR;
     public static final String MSG_CMD = "--"+MSG_SELECTOR;
     public static final String LOG_CMD = "--"+LOG_SELECTOR;
+    public static final String PROPERTIES_CMD = "--"+PROPERTIES_SELECTOR;
 
 
     // -Dcom.sun.jndi.ldap.object.trustURLCodebase=true -Dcom.sun.jndi.rmi.object.trustURLCodebase=true

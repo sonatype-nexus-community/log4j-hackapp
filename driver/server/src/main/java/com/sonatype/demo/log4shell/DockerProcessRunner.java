@@ -187,6 +187,12 @@ public class DockerProcessRunner {
             parameters.addAll(props);
         }
 
+       if(dc.getVMProperties().isEmpty()==false) {
+           parameters.add(PROPERTIES_CMD);
+           for (SystemProperty sp : dc.getVMProperties()) {
+                parameters.add("-D"+sp.name+"="+sp.value);
+           }
+       }
         List<LogVersion> versions= dc.getLogVersions();
         if(versions==null || versions.isEmpty()) {
             throw new RuntimeException("no logversions specified");
@@ -201,6 +207,7 @@ public class DockerProcessRunner {
             if(msgs==null || msgs.isEmpty()) {
                 throw new RuntimeException("no messages specified");
             }
+
         parameters.add(MSG_CMD);
         parameters.addAll(dc.getMessages());
 
