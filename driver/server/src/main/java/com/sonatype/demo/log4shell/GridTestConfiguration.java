@@ -5,23 +5,29 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class JavaVersionTestConfig {
+public class GridTestConfiguration {
 
     private JavaVersion jv;
     private List<LogVersion> logVersions;
     private List<SystemProperty> vmargs;
     private Set<String> reportingProperties=new HashSet<>();
-    private List<String> msgs;
+    private List<Attack> attacks;
 
-    public JavaVersionTestConfig(JavaVersion jv, List<LogVersion> active, List<SystemProperty> props, List<String> logMsgs) {
+    public GridTestConfiguration(JavaVersion jv, List<LogVersion> active, List<SystemProperty> props, List<Attack> attacks) {
         this.jv=jv;
         this.logVersions=active;
         this.vmargs=props;
-        this.msgs=logMsgs;
+        this.attacks =attacks;
 
        if(this.logVersions==null || this.logVersions.isEmpty()) {
            throw new RuntimeException("no log versions specified");
        }
+
+
+        if(this.attacks==null || this.attacks.isEmpty()) {
+            throw new RuntimeException("no payloads specified");
+        }
+
     }
 
 
@@ -41,8 +47,8 @@ public class JavaVersionTestConfig {
         return logVersions;
     }
 
-    public Collection<String> getMessages() {
-        return msgs;
+    public List<Attack> getAttacks() {
+        return attacks;
     }
 
     public JavaVersion getJavaVersion() {

@@ -83,7 +83,7 @@ public class HtmlRenderer {
         model.put("properties",d.getVMProperties());
         model.put("levels",d.getJavaVersions());
         model.put("servers",d.getSpecialistConsoles());
-        model.put("hints",d.getHints());
+        model.put("attacks",d.getAttacks());
         model.put("queuesize",d.queueSize());
         model.put("results",d.rs.getResults());
 

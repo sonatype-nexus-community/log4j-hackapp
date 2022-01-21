@@ -15,8 +15,8 @@
 
                 <div class="card" >
                     <div class="card-body">
-                        <h5 class="card-title">Hints</h5>
-                        #parse("/velocity/gridhints.vm")
+                        <h5 class="card-title">Attacks</h5>
+                        #parse("/velocity/gridattacks.vm")
                     </div>
                 </div>
                 <div class="card">

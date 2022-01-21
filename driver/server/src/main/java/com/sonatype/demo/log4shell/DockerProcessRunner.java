@@ -1,7 +1,8 @@
 package com.sonatype.demo.log4shell;
 
-import com.sonatype.demo.log4shell.runner.GroupRunner;
+import com.sonatype.demo.log4shell.runner.GridRunner;
 import com.sonatype.demo.log4shelldemo.helpers.DockerEnvironment;
+import com.sonatype.demo.log4shelldemo.helpers.ProcessHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,31 +19,12 @@ public class DockerProcessRunner {
 
     private static Logger log= LoggerFactory.getLogger(DockerProcessRunner.class);
     private String runnerPath;
+
     public DockerProcessRunner(String runnerPath) {
+
         this.runnerPath=runnerPath;
-    }
-
-    private static List<String> run(List<String> parameters) throws Exception {
-      File logger = Files.createTempFile("logshell", ".log").toFile();
-
-        ProcessBuilder processBuilder = new ProcessBuilder();
-        processBuilder.command(parameters);
-        processBuilder.redirectError(logger);
-        processBuilder.redirectOutput(logger);
-        Process process = processBuilder.start();
-        boolean r=process.waitFor(30, TimeUnit.SECONDS);
-        if(process.isAlive()) {
-            process.destroy();
-            log.info("process continued beyond 10 seconds");
-        }
 
 
-        List<String> data= Files.readAllLines(logger.toPath());
-        logger.delete();
-
-        log.info("{} lines gathered from output",data.size());
-
-        return data;
     }
 
     /*
@@ -50,12 +32,12 @@ public class DockerProcessRunner {
        Returns a dataset with the resultant data parsed into the approproate groups
 
      */
-    public ResultSet runLogger(JavaVersionTestConfig dc) throws Exception {
+    public ResultSet runLogger(GridTestConfiguration dc) throws Exception {
 
 
             List<String> dockerProcessConfig=createConfig(dc);
             log.info("driver setup: {}",String.join(" ",dockerProcessConfig));
-            List<String> data= run(dockerProcessConfig);
+            List<String> data= ProcessHelper.run(dockerProcessConfig);
             for(String s:data) {
                 System.out.println(">"+s);
             }
@@ -64,9 +46,9 @@ public class DockerProcessRunner {
             String preMsg=null;
 
             for(String line:data) {
-                int index=line.indexOf(GroupRunner.RUNNER_GROUP_SEPERATOR);
+                int index=line.indexOf(GridRunner.GROUP_SEPERATOR);
                 if(index>=0) {
-                    String suffix=line.substring(index+1+(GroupRunner.RUNNER_GROUP_SEPERATOR.length()));
+                    String suffix=line.substring(index+1+(GridRunner.GROUP_SEPERATOR.length()));
                     logVersion=suffix;
                     preMsg=null;
                     continue;
@@ -104,27 +86,12 @@ public class DockerProcessRunner {
             return rs;
     }
 
-    public static Set<String> getLocalDockerImages() throws Exception {
-
-        List<String> parameters=new LinkedList<>();
-        parameters.add("docker");
-        parameters.add("image");
-        parameters.add("ls");
-        parameters.add("--format");
-        parameters.add("{{.Repository}}:{{.Tag}}");
-
-        List<String> rawList=DockerProcessRunner.run(parameters);
-
-        Set<String> images=new HashSet<>();
-        images.addAll(rawList);
-
-        return images;
-
-    }
 
 
 
-    private  List<String> createConfig(JavaVersionTestConfig dc) {
+
+
+    private  List<String> createConfig(GridTestConfiguration config) {
 
 
         List<String> parameters=new LinkedList<>();
@@ -150,7 +117,7 @@ public class DockerProcessRunner {
 
         if(DockerEnvironment.inDockerContainer) {
             parameters.add("--mount");
-            parameters.add("source=log4shelldemo_logjars,target=/driver");
+            parameters.add("source="+DockerEnvironment.logVolumeName+",target=/driver");
             parameters.add("--network");
             parameters.add("log4shelldemo");
         } else {
@@ -160,40 +127,40 @@ public class DockerProcessRunner {
             parameters.add(driver.getAbsolutePath()+":/driver");
         }
         // add image name
-        parameters.add(dc.getImageName());
+        parameters.add(config.getImageName());
 
         // setup java launcher
         parameters.add("java");
 
         // and any -D's
 
-        for(SystemProperty v: dc.getVMProperties()) {
+        for(SystemProperty v: config.getVMProperties()) {
             parameters.add(v.toVMString());
         }
 
         // add the classpath
         parameters.add("-cp");
         parameters.add(runnerPath);
-        parameters.add(GroupRunner.class.getCanonicalName());
+        parameters.add(GridRunner.class.getCanonicalName());
 
 
         // add the properties we want to check the values for
         // these get reported by the runner in the output
         // java.version is always set
 
-        Set<String> props=dc.getReportingProperties();
+        Set<String> props=config.getReportingProperties();
         if(props!=null && props.isEmpty()==false ) {
             parameters.add(REPORT_CMD);
             parameters.addAll(props);
         }
 
-       if(dc.getVMProperties().isEmpty()==false) {
+       if(config.getVMProperties().isEmpty()==false) {
            parameters.add(PROPERTIES_CMD);
-           for (SystemProperty sp : dc.getVMProperties()) {
+           for (SystemProperty sp : config.getVMProperties()) {
                 parameters.add("-D"+sp.name+"="+sp.value);
            }
        }
-        List<LogVersion> versions= dc.getLogVersions();
+        List<LogVersion> versions= config.getLogVersions();
         if(versions==null || versions.isEmpty()) {
             throw new RuntimeException("no logversions specified");
         }
@@ -203,16 +170,21 @@ public class DockerProcessRunner {
                 parameters.add(lv.toString());
             }
 
-        Collection<String> msgs=dc.getMessages();
-            if(msgs==null || msgs.isEmpty()) {
-                throw new RuntimeException("no messages specified");
-            }
+        parameters.add(PAYLOAD_CMD);
 
-        parameters.add(MSG_CMD);
-        parameters.addAll(dc.getMessages());
+        List<Attack> attacks=config.getAttacks();
+            if(attacks==null || attacks.isEmpty()) {
+                throw new RuntimeException("no payloads specified");
+            }
+         for(Attack a:attacks) {
+             if(a.payload==null) throw new RuntimeException("attack "+a.id+" has no payload");
+              parameters.add(""+a.id);
+              parameters.add(a.payload);
+          }
 
 
         return parameters;
     }
+
 
 }

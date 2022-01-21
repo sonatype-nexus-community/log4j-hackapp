@@ -12,13 +12,13 @@ public class Runner {
     public static final String RUNNER_MESSAGE_SEPERATOR = "-- Runner Message ---------------";
     public static final String RUNNER_PROPERTY = "-- Runner Property ---------------";
 
-    public static final String MSG_SELECTOR = "msg";
+    public static final String PAYLOAD_SELECTOR = "payload";
     public static final String REPORT_SELECTOR = "report";
     public static final String LOG_SELECTOR = "log";
     public static final String PROPERTIES_SELECTOR = "properties";
 
     public static final String REPORT_CMD = "--"+REPORT_SELECTOR;
-    public static final String MSG_CMD = "--"+MSG_SELECTOR;
+    public static final String PAYLOAD_CMD = "--"+ PAYLOAD_SELECTOR;
     public static final String LOG_CMD = "--"+LOG_SELECTOR;
     public static final String PROPERTIES_CMD = "--"+PROPERTIES_SELECTOR;
 
@@ -49,18 +49,25 @@ public class Runner {
             }
         }
 
-        List<String> msgs=paramters.get(MSG_SELECTOR);
-        for(String msg:msgs) {
-            System.out.println(RUNNER_MESSAGE_SEPERATOR+" "+msg);
-            logger.info(msg);
+        List<String> msgs=paramters.get(PAYLOAD_SELECTOR);
+        // payloads come as a pair
+        // element 1 is the id
+        // element 2 is the actual payload
+        Iterator<String> i=msgs.iterator();
+        while(i.hasNext()) {
+            String id=i.next();
+            String payload=i.next();
+            System.out.println(RUNNER_MESSAGE_SEPERATOR+" "+id+" "+payload);
+            logger.info(payload);
         }
 
     }
 
     static Map<String, List<String>> parseParams(String[] args) {
 
+
         Map<String, List<String>> results=new HashMap<>();
-        String type=MSG_SELECTOR;
+        String type= PAYLOAD_SELECTOR;
         List<String> entries=new LinkedList<>();
         results.put(type,entries);
 

@@ -26,10 +26,9 @@ public class FrontEnd {
     public static void main(String args[] ) throws Exception {
 
 
+
         log.info("server started");
         d=new Driver();
-
-
 
         render=new HtmlRenderer(d);
 
@@ -72,6 +71,7 @@ public class FrontEnd {
 
 
         put("/version/:id/toggle", (req, res) -> ""+ d.toggleVersionStatus(Integer.parseInt(req.params("id"))));
+        put("/attack/:id/toggle", (req, res) -> ""+ d.toggleActionStatus(Integer.parseInt(req.params("id"))));
 
         put("/java/:id/toggle", (req, res) -> {
 
@@ -186,8 +186,6 @@ public class FrontEnd {
             return "OK";
             
         });
-
-
 
     }
 

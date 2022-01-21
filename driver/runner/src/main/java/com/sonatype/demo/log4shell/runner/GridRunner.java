@@ -6,9 +6,9 @@ import java.util.Map;
 
 import static com.sonatype.demo.log4shell.runner.Runner.*;
 
-public class GroupRunner {
+public class GridRunner {
 
-    public static final String RUNNER_GROUP_SEPERATOR =   "-- Runner Group -----------------";
+    public static final String GROUP_SEPERATOR =   "-- Grid Runner -----------------";
 
     public static void main(String[] args) throws Exception {
 
@@ -16,10 +16,13 @@ public class GroupRunner {
         Map<String, List<String>> paramters=Runner.parseParams(args);
 
         System.out.println(paramters.keySet());
-        List<String> messages=paramters.get(MSG_SELECTOR);
+        List<String> payloads=paramters.get(PAYLOAD_SELECTOR);
         List<String> reports=paramters.get(REPORT_SELECTOR);
         List<String> logversions=paramters.get(LOG_SELECTOR);
 
+        if(payloads==null || payloads.isEmpty()) {
+            throw new RuntimeException("no payloads specified");
+        }
         String cp=System.getProperty("java.class.path");
 
         if(logversions==null || logversions.isEmpty()) {
@@ -35,10 +38,10 @@ public class GroupRunner {
                 app.add(REPORT_CMD);
                 app.addAll(reports);
             }
-            app.add(MSG_CMD);
-            app.addAll(messages);
+            app.add(PAYLOAD_CMD);
+            app.addAll(payloads);
 
-            System.out.println(RUNNER_GROUP_SEPERATOR+" "+version);
+            System.out.println(GROUP_SEPERATOR +" "+version);
             ProcessLauncher.javaLaunch(myCp,Runner.class.getCanonicalName(),paramters.get(PROPERTIES_SELECTOR),app);
         }
 
