@@ -1,9 +1,9 @@
-package com.sonatype.demo.log4shell;
+package com.sonatype.demo.log4shell.config;
 
 import lombok.Data;
 
 @Data
-public class LogVersion {
+public class LogVersion{
 
     private int id;
    private String version;
@@ -29,6 +29,6 @@ public class LogVersion {
     }
 
     public String toString() {
-        return version+"::"+location;
+        return version; //+"::"+location;
     }
 }

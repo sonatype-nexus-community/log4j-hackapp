@@ -1,6 +1,6 @@
-<label></label><input type="checkbox"  onclick="clickAll('javaversion')">click all</label>
+<label><input type="checkbox"  onclick="clickAll('javaversion')">click all</label>
 #foreach($level in $levels)
-<label><input type="checkbox" class="javaversion form-check-input toggle" ic-put-to="/java/${level.version}/toggle"  #if($level.active)checked#end>
-  ${level.version}
+<label><input type="checkbox" class="javaversion form-check-input toggle" ic-put-to="/java/${level.getID()}/toggle"  #if($level.active)checked#end>
+  ${level.label()}
 </label>
 #end

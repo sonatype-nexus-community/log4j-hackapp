@@ -9,15 +9,16 @@ import java.util.HashSet;
 @WebSocket
 public class WebSocketHandler {
 
-    private Gson gson=new Gson();
-    private boolean muted=false;
+    private Gson gson = new Gson();
+
 
     public static WebSocketHandler handler;
 
     public WebSocketHandler() {
-        handler=this;
+        handler = this;
     }
-    private HashSet<Session> sessions=new HashSet<>();
+
+    private HashSet<Session> sessions = new HashSet<>();
 
     @OnWebSocketConnect
     public void onConnect(Session s) throws Exception {
@@ -44,17 +45,16 @@ public class WebSocketHandler {
 
     private void publish(Object o) {
 
-        if(muted) return;
 
-        String msg="";
-        if(o==null) return;
-        if(o instanceof  String) {
-            msg=o.toString();
+        String msg = "";
+        if (o == null) return;
+        if (o instanceof String) {
+            msg = o.toString();
         } else {
             msg = gson.toJson(o);
         }
 
-        final String payload=msg;
+        final String payload = msg;
 
         sessions.stream().filter(Session::isOpen).forEach(session -> {
             try {
@@ -68,16 +68,8 @@ public class WebSocketHandler {
     public void sendUpdate(String target) {
 
 
-            String msg = ("{'cmd':'update','target':'" + target + "' }").replace("'", "\"");
-            publish(msg);
+        String msg = ("{'cmd':'update','target':'" + target + "' }").replace("'", "\"");
+        publish(msg);
 
-    }
-
-    public void mute() {
-        this.muted=true;
-    }
-
-    public void unmute() {
-        this.muted=false;
     }
 }

@@ -6,15 +6,13 @@ import java.util.Map;
 
 import static com.sonatype.demo.log4shell.runner.Runner.*;
 
-public class GridRunner {
+public class GroupRunner {
 
-    public static final String LOG4J_VERSION_SEPERATOR =   "-- Grid Runner -----------------";
+    public static final String RUNNER_GROUP_SEPERATOR =   "-- Group Runner -----------------";
 
     public static void main(String[] args) throws Exception {
 
-
         Map<String, List<String>> paramters=Runner.parseParams(args);
-
         List<String> payloads=paramters.get(PAYLOAD_SELECTOR);
         List<String> reports=paramters.get(REPORT_SELECTOR);
         List<String> logversions=paramters.get(LOG_SELECTOR);
@@ -40,7 +38,7 @@ public class GridRunner {
             app.add(PAYLOAD_CMD);
             app.addAll(payloads);
 
-            System.out.println(LOG4J_VERSION_SEPERATOR +" "+version);
+            System.out.println(RUNNER_GROUP_SEPERATOR+" "+version);
             ProcessLauncher.javaLaunch(myCp,Runner.class.getCanonicalName(),paramters.get(PROPERTIES_SELECTOR),app);
         }
 

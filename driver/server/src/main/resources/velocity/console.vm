@@ -1,3 +1,4 @@
+console ${c.records.size()}
 <table id="" class="table table-borderless table-sm w-auto bg-dark text-light">
     #foreach($r in $c.records)
     <tr><td>

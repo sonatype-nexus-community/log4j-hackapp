@@ -1,6 +1,6 @@
 <button type="button" class="btn btn-primary" onclick="clickAll('attack')">Toggle all</button>
 #foreach($attack in $attacks)
-<label><input type="checkbox" class="attack form-check-input toggle" ic-put-to="/attack/${attack.id}/toggle"  #if($attack.active)checked#end>
-  ${attack.type}
+<label><input type="checkbox" class="attack form-check-input toggle" ic-put-to="/attack/${attack.getID()}/toggle"  #if($attack.isActive())checked#end>
+  ${attack.label()}
 </label>
 #end

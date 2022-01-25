@@ -76,7 +76,7 @@
                             <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
                                 #foreach($c in $consoles)
                                 <li class="nav-item" role="presentation">
-                                    <button class="nav-link #if( $velocityCount==1 ) active #end" id="console-${c.handle}-tab" data-bs-toggle="pill" data-bs-target="#console-${c.handle}" type="button" role="tab" aria-controls="pills-home" aria-selected="true">${c.name}</button>
+                                    <button class="nav-link #if( $velocityCount==1 ) active #end" id="console-${c.getHandle()}-tab" data-bs-toggle="pill" data-bs-target="#console-${c.getHandle()}" type="button" role="tab" aria-controls="pills-home" aria-selected="true">${c.getName()}</button>
                                 </li>
                                 #end
                             </ul>
@@ -84,9 +84,8 @@
 
                             <div class="tab-content">
                                 #foreach($c in $consoles)
-
-                                <div class="tab-pane fade #if( $velocityCount==1 ) show active #end console" id="console-${c.handle}" role="tabpanel">
-                                    <div class="console" id='console-${c.handle}-main' ic-get-from="/views/console/${c.name}" ic-target="#target-span-$velocityCount"></div>
+                                <div class="tab-pane fade #if( $velocityCount==1 ) show active #end console" id="console-${c.getHandle()}" role="tabpanel">
+                                    <div class="console" id='console-${c.getHandle()}-main' ic-get-from="/views/console/${c.getName()}" ic-target="#target-span-$velocityCount"></div>
                                     <div>
                                         <div id="target-span-$velocityCount">
                                             #parse("/velocity/console.vm")
@@ -100,13 +99,15 @@
 
                         </div>
                     </div>
-                    #foreach($c in $servers)
+
+                    #foreach($c in $special)
+
                     <div class="card" >
                         <div class="card-body">
-                            <h5 class="card-title">$c.name Console</h5>
-                            <div  class="console" id='console-ldap-main' ic-get-from="/views/console/$c.handle" ic-target="#target-span-$c.handle"></div>
+                            <h5 class="card-title">${c.getName()} Console </h5>
+                            <div  class="console" id='console-ldap-main' ic-get-from="/views/console/$c.getHandle()" ic-target="#target-span-$c.getHandle()"></div>
                             <div>
-                                <div id="target-span-$c.handle">
+                                <div id="target-span-$c.getHandle()">
                                     #parse("/velocity/console.vm")
                                 </div>
                             </div>

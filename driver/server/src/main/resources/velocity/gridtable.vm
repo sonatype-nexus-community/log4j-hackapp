@@ -1,18 +1,23 @@
 <table class="table">
     <thead><tr>
-        <th>Java Required</th><th>Java Reported</th><th>Log4J</th><th>Result type</th><th>Message mutated</th><th>Message</th><th>Response</th>
-
+        <th>Java Required</th>
+        <th>Java Reported</th><th>Log4J</th>
+        <th>Attack type</th><th>Result type</th>
+        <th>Message mutated</th>
+        <th>Payload</th>
+        <th>Response</th>
     </tr></thead>
     <tbody>
     #foreach($r in $results)
     <tr><td>${r.jv.version}</td>
         <td>${r.reportedJava()}</td>
         <td>${r.lv.version}</td>
-        <td>${r.type.name()}</td>
+        <td>${r.getAttackName()}</td>
+        <td>${r.result.name()}</td>
         <td>${r.mutated}</td>
-        <td>${r.logMsg}</td>
+        <td>${r.getPayload()}</td>
         <td><a href="/views/results/raw/${r.id}" target="_blank">raw</a></td>
-        <td>${r.getConsole()}</td></tr>
+        <td>${r.getConsoleData()}</td></tr>
     #end
     </tbody>
 </table>

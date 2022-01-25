@@ -8,6 +8,7 @@ import java.util.List;
 @Data
 public class Record {
 
+
     public String version;
     public String line;
     public Integer[] propids =new Integer[0];

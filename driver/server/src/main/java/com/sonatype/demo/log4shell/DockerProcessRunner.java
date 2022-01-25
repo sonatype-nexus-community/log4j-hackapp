@@ -1,15 +1,17 @@
 package com.sonatype.demo.log4shell;
 
+import com.sonatype.demo.log4shell.config.*;
 import com.sonatype.demo.log4shell.runner.GridRunner;
 import com.sonatype.demo.log4shelldemo.helpers.DockerEnvironment;
 import com.sonatype.demo.log4shelldemo.helpers.ProcessHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroturnaround.exec.ProcessExecutor;
+import org.zeroturnaround.exec.stream.LogOutputStream;
 
 import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -17,8 +19,8 @@ import static com.sonatype.demo.log4shell.runner.Runner.*;
 
 public class DockerProcessRunner {
 
-    private static Logger log= LoggerFactory.getLogger(DockerProcessRunner.class);
-    private String runnerPath;
+    private static final Logger log= LoggerFactory.getLogger(DockerProcessRunner.class);
+    private final String runnerPath;
 
     public DockerProcessRunner(String runnerPath) {
 
@@ -32,66 +34,19 @@ public class DockerProcessRunner {
        Returns a dataset with the resultant data parsed into the approproate groups
 
      */
-    public ResultSet runLogger(GridTestConfiguration dc) throws Exception {
-
+    public List<String> runLogger(Configuration.RunnerConfig dc) throws Exception {
 
             List<String> dockerProcessConfig=createConfig(dc);
+
             log.info("driver setup: {}",String.join(" ",dockerProcessConfig));
-            List<String> data= ProcessHelper.run(dockerProcessConfig);
-            for(String s:data) {
-                System.out.println(">"+s);
-            }
-            ResultSet rs=new ResultSet();
-            String logVersion=null;
-            String preMsg=null;
 
-            for(String line:data) {
-                int index=line.indexOf(GridRunner.GROUP_SEPERATOR);
-                if(index>=0) {
-                    String suffix=line.substring(index+1+(GridRunner.GROUP_SEPERATOR.length()));
-                    logVersion=suffix;
-                    preMsg=null;
-                    continue;
-                }
-                index=line.indexOf(RUNNER_MESSAGE_SEPERATOR);
-                if(index>=0) {
-                    preMsg = line.substring(index + 1+(RUNNER_MESSAGE_SEPERATOR.length()));
-                    continue;
-                }
-                index=line.indexOf(RUNNER_PROPERTY);
-                if(index>=0) {
-                    String l=line.substring(index + 1 +(RUNNER_PROPERTY.length()));
-                    index=l.indexOf("!!");
-                    String key=line.substring(0,index);
-                    String suffix=line.substring(index+2);
-                    char a=suffix.charAt(0);
-                    switch(a) {
-                        case '?' : //missing
-                            rs.addMissingProperty(logVersion,preMsg,key);
-                          break;
-                        case '=' : // got a value
-                            rs.addPropertyValue(logVersion,preMsg,key,suffix.substring(1));
-                          break;
-                    }
-                    continue;
+           return  ProcessHelper.run(dockerProcessConfig);
 
-                }
-
-                System.out.println("lv="+logVersion+",pm="+preMsg+",r="+line);
-                rs.add(logVersion,preMsg,line);
-
-
-            }
-
-            return rs;
     }
 
 
 
-
-
-
-    private  List<String> createConfig(GridTestConfiguration config) {
+    private  List<String> createConfig(Configuration.RunnerConfig config) {
 
 
         List<String> parameters=new LinkedList<>();
@@ -148,43 +103,69 @@ public class DockerProcessRunner {
         // these get reported by the runner in the output
         // java.version is always set
 
-        Set<String> props=config.getReportingProperties();
-        if(props!=null && props.isEmpty()==false ) {
+        Set<String> props=config.getReportingPropertyNames();
+        if(props!=null && !props.isEmpty()) {
             parameters.add(REPORT_CMD);
             parameters.addAll(props);
         }
 
-       if(config.getVMProperties().isEmpty()==false) {
+       if(config.hasVMProperties()) {
            parameters.add(PROPERTIES_CMD);
            for (SystemProperty sp : config.getVMProperties()) {
                 parameters.add("-D"+sp.name+"="+sp.value);
            }
        }
-        List<LogVersion> versions= config.getLogVersions();
-        if(versions==null || versions.isEmpty()) {
-            throw new RuntimeException("no logversions specified");
-        }
 
-            parameters.add(LOG_CMD);
+       if(!config.hasLogVersions()) {
+           throw new RuntimeException("no logversions specified");
+       }
+        List<LogVersion> versions= config.getLogVersions();
+        parameters.add(LOG_CMD);
             for(LogVersion lv:versions) {
-                parameters.add(lv.toString());
+                parameters.add(lv.getVersion()+"::"+lv.getLocation()); // TODO make pairs of entries
+            }
+
+            if(!config.hasAttacks()) {
+                throw new RuntimeException("no attack payloads specified");
             }
 
         parameters.add(PAYLOAD_CMD);
 
-        List<Attack> attacks=config.getAttacks();
-            if(attacks==null || attacks.isEmpty()) {
-                throw new RuntimeException("no payloads specified");
-            }
-         for(Attack a:attacks) {
-             if(a.payload==null) throw new RuntimeException("attack "+a.id+" has no payload");
-              parameters.add(""+a.id);
-              parameters.add(a.payload);
+
+         for(ConfigElement<Attack> a:config.getAttacks()) {
+
+                 if (a.getBase().payload == null) throw new RuntimeException("attack " + a + " has no payload");
+                 parameters.add("" + a.getID());
+                 parameters.add(a.getBase().payload);
+
           }
 
 
         return parameters;
     }
 
+    public void  runAttacks(Configuration.RunnerConfig dc,ResultsLineHandler handler) throws Exception {
+
+        List<String> dockerProcessConfig=createConfig(dc);
+
+        log.info("driver setup(2): {}",String.join(" ",dockerProcessConfig));
+
+        runAttacks(dockerProcessConfig,handler);
+
+    }
+
+
+   private void runAttacks(List<String> parameters, ResultsLineHandler handler) throws Exception {
+
+        new ProcessExecutor().command(parameters)
+                .redirectOutput(new LogOutputStream() {
+                    @Override
+                    protected void processLine(String line) {
+                            handler.handle(line);
+                    }
+                })
+                .timeout(60, TimeUnit.SECONDS)
+                .execute();
+    }
 
 }

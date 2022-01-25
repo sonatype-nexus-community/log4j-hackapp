@@ -24,12 +24,17 @@ console.log(event.data);
        for(var i=0;i < elements.length;i++){
          elements[i].click();
        }
-
+       return;
     }
-    else {
+
+    if(msg.target.startsWith("console")) {
+        var e=document.getElementById("grid");
+        if(e!=null) e.click();
+    }
+
     var e=document.getElementById(msg.target);
     if(e!=null) e.click();
-    }
+
   }
 
 

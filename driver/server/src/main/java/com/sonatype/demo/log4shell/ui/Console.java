@@ -1,5 +1,7 @@
-package com.sonatype.demo.log4shell;
+package com.sonatype.demo.log4shell.ui;
 
+import com.sonatype.demo.log4shell.Record;
+import com.sonatype.demo.log4shell.Result;
 import lombok.Data;
 import org.bitbucket.cowwoc.diffmatchpatch.DiffMatchPatch;
 
@@ -22,24 +24,32 @@ public class Console {
                 .toLowerCase();
     }
 
-    public List<Record> toRecords(TestResult dc) {
+    public String getHandle() {
+        return handle;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public List<Record> toRecords(Result dc) {
 
         List<Record> results=new LinkedList<>();
-        List<String> lines=dc.getResults();
+        List<String> lines=dc.data;
         if(lines!=null) {
 
             if(lines.size()==1) {
                 Record rec=new Record();
                 rec.version=dc.lv.getVersion();
-                rec.propids =dc.getActivePropertyIDs();
+                rec.propids =dc.getActiveVMProperties();
 
                 String l=lines.get(0).trim();
-                if(l.equals(dc.getLogMsg().trim())) {
+                if(l.equals(dc.getPayload().trim())) {
                     rec.line=l;
                 }
                 else {
                     dc.mutated=true;
-                    LinkedList<DiffMatchPatch.Diff> diff = dmp.diffMain(dc.getLogMsg(), l,false);
+                    LinkedList<DiffMatchPatch.Diff> diff = dmp.diffMain(dc.getPayload(), l,false);
                     StringBuilder sb=new StringBuilder();
                     for(DiffMatchPatch.Diff d:diff) {
                         switch(d.operation) {
@@ -68,11 +78,12 @@ public class Console {
         return results;
 
     }
-    public void addResult(TestResult dc) {
+    public void addResult(Result dc) {
 
         List<Record> results=toRecords(dc);
         records.addAll(results);
          dc.console=results;
 
     }
+
 }

@@ -20,8 +20,6 @@ public class ProcessLauncher {
         parameters.add(className);
         if(appParameters!=null) parameters.addAll(appParameters);
 
-        System.out.println("java cmd "+parameters);
-
         ProcessBuilder processBuilder = new ProcessBuilder();
         processBuilder.command(parameters);
 

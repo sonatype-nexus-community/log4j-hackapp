@@ -1,85 +1,67 @@
 package com.sonatype.demo.log4shell;
 
+import com.sonatype.demo.log4shell.config.AttackType;
 import lombok.Data;
 
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
 
 @Data
 public class SummaryRecord {
 
     String jv;
     String lv;
-    int[] score;
+    Map<String,Count>scores=new HashMap<>();
 
-    public SummaryRecord(String jv, String lv) {
-        this.jv=jv;
-        this.lv=lv;
-        score=new int[ResultType.values().length];
-
-    }
-
-    public String getResult(ResultType[] cols) {
-
-            Map<String,Integer> results=new TreeMap<>();
-
-            // sum the results by status
-
-            for(ResultType rt:cols) {
-                int value=score[rt.ordinal()];
-                if(value>0) {
-                    String result=rt.status();
-                    if(results.containsKey(result)) {
-                        value=value+results.get(result);
-                    }
-                    results.put(result,value);
-                }
-
-            }
-
-            StringBuilder sb=new StringBuilder();
-
-            append(sb,results,"danger");
-            append(sb,results,"warning");
-            append(sb,results,"success");
-            append(sb,results,"body");
-
-            return sb.toString();
-
-
+    public SummaryRecord(Result r) {
+        this.jv=r.jv.version;
+        this.lv=r.lv.getVersion();
 
     }
 
-    private void append(StringBuilder sb, Map<String, Integer> results, String key) {
+    public String getResultClass(AttackType t,ResultType rt) {
+        int c=getResult(t,rt);
+        if(c==0) return "bg-light";
 
-        if(results.containsKey(key)) {
-            if(sb.length()>0) {
-                sb.append(",");
-            }
-            sb.append(results.get(key).toString());
-        }
-    }
+        switch( rt ) {
+            case SUCCESS:   return "bg-danger";
+            case PARTIAL:   return "bg-warning";
+            case FAIL:      return "bg-success";
+            case ERROR:     return "bg-secondary";
 
-    public String getStatus(ResultType[] cols) {
+            default: return "bg-info";
 
-        Set<String> results=new HashSet<>();
-
-        // sum the results by status
-
-        for(ResultType rt:cols) {
-            int value=(score[rt.ordinal()]);
-            if(value>0) {
-                String result=rt.status();
-                results.add(result);
-            }
         }
 
-        if(results.contains("danger")) return "danger";
-        if(results.contains("warning")) return "warning";
-        if(results.contains("success")) return "success";
-        return "body";
+    }
+    public int getResult(AttackType t,ResultType rt) {
+        String key=t.name()+"/"+rt.name();
+        if(scores.containsKey(key)==false) return 0;
+        return scores.get(key).count;
+    }
 
+    public void record(Result dc) {
+
+        AttackType t=dc.getAttack().type;
+        ResultType rt=dc.result;
+        String key=t.name()+"/"+rt.name();
+        Count c=scores.get(key);
+        if(c==null) {
+            c=new Count();
+            scores.put(key,c);
+        } else {
+            throw new RuntimeException("dup key?"+key);
+        }
+        c.count++;
+
+
+    }
+
+    @Data
+    static class Count {
+        private int count=0;
+
+        public int getCount() {
+            return count;
+        }
     }
 }

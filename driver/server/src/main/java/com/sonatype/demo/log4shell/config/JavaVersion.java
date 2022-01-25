@@ -1,4 +1,4 @@
-package com.sonatype.demo.log4shell;
+package com.sonatype.demo.log4shell.config;
 
 import lombok.Data;
 
@@ -25,4 +25,5 @@ public class JavaVersion implements Comparable{
         return version.compareTo(jo.version);
 
     }
+
 }

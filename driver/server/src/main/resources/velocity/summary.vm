@@ -12,21 +12,33 @@
 <h1>Grid Summary</h1>
 <table class="table table-sm ">
 <thead class="table-dark">
-tr>
-<th>Image Name</th>
-<th>Log4J Version</th>
-#foreach($t in $types)
-<th>$t.columnName()</th>
+<tr>
+<th></th>
+<th></th>
+#foreach($a in $attacks)
+<th colspan="5">$a.name()</th>
 #end
 </tr>
+<tr>
+    <th>Image Name</th>
+    <th>Log4J Version</th>
+    #foreach($a in $attacks)
+    #foreach($r in $results)
+        <th>$r.name()</th>
+    #end
+    #end
+</tr>
 </thead>
+
     <tbody>
     #foreach($sr in $summary)
     <tr>
         <td>$sr.jv</td>
         <td>$sr.lv</td>
-        #foreach($t in $types)
-        <td>${sr.score[$t.ordinal()]}</td>
+        #foreach($a in $attacks)
+          #foreach($r in $results)
+           <td class="$sr.getResultClass($a,$r)">$sr.getResult($a,$r)</td>
+          #end
         #end
     </tr>
     #end

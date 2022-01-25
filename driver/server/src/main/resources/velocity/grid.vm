@@ -55,10 +55,10 @@
                 </div>
         </div>
         <div class="col-7">
-            <div class="row">
-                <div>Grid queue remaining ${queuesize}</div>
+            <div class="row" id="grid" ic-get-from="/views/gridtable" ic-target="#target-grid">
+                <div id="target-grid">
                 #parse("/velocity/gridtable.vm")
-
+                </div>
             </div>
         </div>
     </div>

@@ -9,8 +9,9 @@ public class Runner {
 
     public static final String JDEMO_PROPS = "LOG4JDEMO_PROPS";
 
-    public static final String RUNNER_MESSAGE_SEPERATOR = "-- Runner Message ---------------";
-    public static final String RUNNER_PROPERTY = "-- Runner Property ---------------";
+    public static final String PAYLOAD_RESULTS_SEPERATOR = "-- Runner Payload Start -----------";
+    public static final String PAYLOAD_RESULTS_TERMINATOR = "-- Runner Payload End  -----------";
+    public static final String SYSTEM_PROPERTY_VALUE = "-- Runner Property ---------------";
 
     public static final String PAYLOAD_SELECTOR = "payload";
     public static final String REPORT_SELECTOR = "report";
@@ -42,9 +43,9 @@ public class Runner {
             Properties p= System.getProperties();
             for(String key:propList) {
                 if(p.containsKey(key)) {
-                    System.out.println(RUNNER_PROPERTY+" "+key+"!!="+p.getProperty(key));
+                    System.out.println(SYSTEM_PROPERTY_VALUE +" "+key+"!!="+p.getProperty(key));
                 } else {
-                    System.out.println(RUNNER_PROPERTY+" "+key+"!!?");
+                    System.out.println(SYSTEM_PROPERTY_VALUE +" "+key+"!!?");
                 }
             }
         }
@@ -57,8 +58,9 @@ public class Runner {
         while(i.hasNext()) {
             String id=i.next();
             String payload=i.next();
-            System.out.println(RUNNER_MESSAGE_SEPERATOR+" "+id+" "+payload);
+            System.out.println(PAYLOAD_RESULTS_SEPERATOR +" "+id+" "+payload);
             logger.info(payload);
+            System.out.println(PAYLOAD_RESULTS_TERMINATOR +" "+id);
         }
 
     }
