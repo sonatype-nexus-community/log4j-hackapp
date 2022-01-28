@@ -52,6 +52,11 @@
             <scope>compile</scope>
         </dependency>
 
+        <dependency>
+            <groupId>com.github.dpaukov</groupId>
+            <artifactId>combinatoricslib3</artifactId>
+            <version>3.3.2</version>
+        </dependency>
 
     </dependencies>
 

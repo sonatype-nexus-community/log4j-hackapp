@@ -11,6 +11,7 @@ import java.util.*;
 public class Result {
 
      public List<Record> console;
+     public Throwable error;
      private Set<Integer> activeVMProperties=new HashSet<>();
      public boolean mutated;
      int id;
@@ -23,14 +24,28 @@ public class Result {
      public Map<String,Object> properties;
      public Set<String> vmprops;
 
-     public String getKey() {
-         String key=jv.version+"/"+ lv.getVersion();
-         if(vmprops!=null && vmprops.isEmpty()==false) {
-              for(String s:vmprops){
+     public String getPrimaryKey() {
+
+         String key=jv.version
+                 +"/"
+                 +lv.getVersion();
+
+         if(activeVMProperties!=null) {
+              for(Integer s:activeVMProperties){
                    key=key+"/"+s;
               }
          }
          return key;
+     }
+
+     public String activePropsLabels() {
+          StringBuilder sb=new StringBuilder();
+          if(activeVMProperties!=null) {
+               for(int p:activeVMProperties) {
+                    sb.append("<span class=\"badge rounded-pill bg-info\">"+p+"</span>");
+               }
+          }
+          return new String(sb);
      }
 
      public Result(Attack a ) {

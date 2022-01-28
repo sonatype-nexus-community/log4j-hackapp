@@ -10,7 +10,7 @@ public class SystemProperty  {
 
 
     public SystemProperty(String s, String value) {
-        this.name=s;
+        this.name=s.trim();
         this.value=value;
 
     }

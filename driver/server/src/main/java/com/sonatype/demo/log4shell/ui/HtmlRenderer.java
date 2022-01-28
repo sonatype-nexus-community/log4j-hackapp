@@ -28,8 +28,7 @@ public class HtmlRenderer {
     public  String renderIndex() {
 
         Map<String, Object> model = new HashMap<>();
-        Collection<ConfigElement<LogVersion>> versions=config.getAllLogVersions();
-        model.put("versions",versions);
+
 
         if(DockerEnvironment.inDockerContainer) {
             model.put(LDAPADDR,"ldap.dev");
@@ -42,6 +41,7 @@ public class HtmlRenderer {
             }
         }
         model.put("properties",config.getAllVMProperties());
+        model.put("versions",config.getOrderedLogVersions());
         model.put("levels",config.getAllJavaVersions());
         model.put("servers",config.getSpecialistConsoleNames());
         model.put("hints",config.getHints());
@@ -76,10 +76,8 @@ public class HtmlRenderer {
 
     public  String renderGrid(Driver d) {
         Map<String, Object> model = new HashMap<>();
-        Collection<ConfigElement<LogVersion>> versions=config.getAllLogVersions();
-        model.put("versions",versions);
 
-        if(DockerEnvironment.inDockerContainer) {
+       if(DockerEnvironment.inDockerContainer) {
             model.put(LDAPADDR,"ldap.dev");
         } else {
             try {
@@ -89,12 +87,14 @@ public class HtmlRenderer {
 
             }
         }
+        model.put("versions",config.getOrderedLogVersions());
         model.put("properties",config.getAllVMProperties());
         model.put("levels",config.getAllJavaVersions());
         model.put("servers",config.getSpecialistConsoleNames());
         model.put("attacks",config.getAllAttacks());
         model.put("queuesize",d.queueSize());
         model.put("results",d.rs.getResults());
+        model.put("options",config.getConfigOption());
 
 
         return renderTemplate("velocity/grid.vm", model);
@@ -107,7 +107,7 @@ public class HtmlRenderer {
     public String renderVersions() {
 
         Map<String, Object> model = new HashMap<>();
-        model.put("versions",config.getAllLogVersions());
+        model.put("versions",config.getOrderedLogVersions());
         return renderTemplate("velocity/versions.vm",model);
 
     }

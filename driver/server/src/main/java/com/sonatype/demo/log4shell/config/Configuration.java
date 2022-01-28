@@ -1,7 +1,7 @@
 package com.sonatype.demo.log4shell.config;
-
 import com.sonatype.demo.log4shell.*;
 import com.sonatype.demo.log4shelldemo.helpers.DockerEnvironment;
+import org.paukov.combinatorics3.Generator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,7 +24,7 @@ public class Configuration {
     private static final Logger log = LoggerFactory.getLogger(FrontEnd.class);
 
     private final ConfigMap<LogVersion> logVersions = new ConfigMap<>();
-    private final Map<String,LogVersion> logVersionsByName = new TreeMap<>();
+    private final Map<String,ConfigElement<LogVersion>> logVersionsByName  = new TreeMap<>(new DotArrayStringComparitor());
 
     private final ConfigMap<Attack> attacks = new ConfigMap<>();
     private final Map<Integer,Attack> attacksByID = new TreeMap<>();
@@ -38,6 +38,11 @@ public class Configuration {
 
     private String runnerPath;
 
+    private final ConfigMap<String> configBinaryOptions=new ConfigMap<>();
+    private int comboMode;
+    private int silentMode;
+    private int parallelMode;
+
     public static Configuration loadConfig(File config) throws Exception {
 
         Configuration c = new Configuration();
@@ -48,6 +53,9 @@ public class Configuration {
         c.loadVMProperties();
 
         c.reportingProperties.add("java.version");
+
+        c.comboMode= c.configBinaryOptions.addEntry("Generate property combinations").getID();
+        c.silentMode= c.configBinaryOptions.addEntry("Run silent (no detailed data stored").getID();
 
         return c;
     }
@@ -107,7 +115,7 @@ public class Configuration {
 
 
     private void addAttack(Attack a) {
-        int id=attacks.addEntry(a);
+        int id=attacks.addEntry(a).getID();
         attacksByID.put(id,a);
     }
 
@@ -117,6 +125,9 @@ public class Configuration {
         vmProperties.addEntry(p);
         p = new SystemProperty("com.sun.jndi.ldap.object.trustSerialData", "true");
         vmProperties.addEntry(p);
+        p = new SystemProperty("log4j2.formatMsgNoLookups", "true");
+        vmProperties.addEntry(p);
+
     }
 
 
@@ -124,6 +135,8 @@ public class Configuration {
 
 
         Set<String> localImages = DockerEnvironment.getLocalDockerImages();
+        List<String> sorted = new LinkedList<>(localImages);
+        sorted.sort(new DockerImageNameComparitor());
 
         File config = new File(c, "javalevels.txt");
         List<String> lines = Files.readAllLines(config.toPath());
@@ -192,14 +205,16 @@ public class Configuration {
 
     private void registerLog4JJars(File current, List<Path> candidates) {
 
+
         for (Path p : candidates) {
             p = p.toAbsolutePath();
             File f = p.toFile();
             String name = f.getName();
             String version = name.substring(0, name.length() - fatjars.length());
+
             LogVersion lv = new LogVersion(version, relLoc(current, f));
-            logVersions.addEntry(lv);
-            logVersionsByName.put(lv.getVersion(), lv);
+            ConfigElement<LogVersion> entry=logVersions.addEntry(lv);
+            logVersionsByName.put(lv.getVersion(), entry);
 
             log.info("log4j version {} = jar {}", version, lv.getVersion());
 
@@ -223,6 +238,8 @@ public class Configuration {
         return runnerPath;
     }
 
+
+
     public List<LogVersion> getActiveLogVersions() {
       return logVersions.getActive();
     }
@@ -231,9 +248,7 @@ public class Configuration {
         return attacks.getActiveElements();
     }
 
-    public Collection<ConfigElement<LogVersion>> getAllLogVersions() {
-        return logVersions.values();
-    }
+   // public Collection<ConfigElement<LogVersion>> getAllLogVersions() {return logVersions.values();}
 
     public Collection<ConfigElement<SystemProperty>> getAllVMProperties() {
         return vmProperties.values();
@@ -257,6 +272,8 @@ public class Configuration {
 
 
 
+    public boolean toggleOption(int id) { return  configBinaryOptions.toggle(id); }
+
     public boolean toggleVersion(int id) { return  logVersions.toggle(id);}
 
     public boolean  toggleJavaVersion(int id) { return javaVersions.toggle(id);}
@@ -274,17 +291,6 @@ public class Configuration {
     }
 
 
-    private List<Set<Integer>> generateCombos(Set<Integer> activeIDs) {
-
-        List<Set<Integer>> results=new LinkedList<>();
-        results.add(new HashSet<>()); // the empty set
-
-        if(activeIDs!=null && !activeIDs.isEmpty()) {
-            results.add(activeIDs);
-        }
-
-        return results;
-    }
 
     public List<ConfigElement<Attack>> getAdhocAttack(String payload) {
         Attack a=Attack.buildSimpleMutatedAttack(AttackType.ADHOC,payload);
@@ -295,14 +301,42 @@ public class Configuration {
 
     }
 
+    public Collection<String> getLogNames() {
+        return logVersionsByName.keySet();
+    }
+
+    public ConfigElement<LogVersion> getLogVersion(String s) {
+            return logVersionsByName.get(s);
+    }
+
+    public List<ConfigElement<LogVersion>> getOrderedLogVersions() {
+
+        List<ConfigElement<LogVersion>> versions=new LinkedList<>();
+        Collection<String> levelNames=getLogNames();
+
+        for(String s:levelNames) {
+            versions.add(getLogVersion(s));
+        }
+        return versions;
+
+    }
+
+    public Collection<ConfigElement<String>> getConfigOption() {
+        return configBinaryOptions.values();
+    }
+
+    public boolean isSilentMode() {
+        return configBinaryOptions.isActive(silentMode);
+    }
+
 
     public class RunnerConfig {
 
         private final JavaVersion jv;
         public List<LogVersion> logVersions;
-        public List<SystemProperty> vmprops;
+       private List<SystemProperty> vmprops;
         public List<ConfigElement<Attack>> attacks;
-        public Set<Integer> activeVMProperties;
+        private Set<Integer> activeVMProperties;
 
 
         public RunnerConfig(JavaVersion jv) {
@@ -342,7 +376,7 @@ public class Configuration {
         }
 
         public LogVersion getLogVersion(String v) {
-            return logVersionsByName.get(v);
+            return logVersionsByName.get(v).getBase();
         }
 
         public JavaVersion getJavaVersion() {
@@ -357,30 +391,173 @@ public class Configuration {
         public Collection<ConfigElement<Attack>> getAllAttacks() {
             return Configuration.this.attacks.values();
         }
+
+        public Set<Integer> getActiveVMProperties() {
+            return activeVMProperties;
+        }
+
     }
 
     public void generateRunnerConfigs(List<ConfigElement<Attack>> attacks,ConfigHandler h) {
 
-        // for active system properties we'll try all combinations ..
+            // if in property combo mode we do all combinaions of active properties (inc empty set)
+            // also disable any data storage other than the basics
 
-        Set<Integer> activeIDs=vmProperties.getActiveIDs();
-        List<Set<Integer>> activeCombos=generateCombos(activeIDs);
+            if(configBinaryOptions.isActive(comboMode)) {
+                System.out.println("Generating property combination attack");
+                Generator.subset(vmProperties.getActiveIDs())
+                        .simple()
+                        .stream()
+                        .forEach(s -> buildConfig(s, attacks, h));
+            } else {
+                System.out.println("Generating attacks");
+                System.out.println("Silent Mode="+isSilentMode());
 
-        for(Set<Integer> p:activeCombos) {
-            for (JavaVersion jv : javaVersions.getActive()) {
-                RunnerConfig rc = new RunnerConfig(jv);
-                rc.activeVMProperties=p;
-                rc.logVersions = logVersions.getActive();
-                rc.vmprops = vmProperties.getActive();
-                rc.attacks = attacks;
-               h.handle(rc);
+                buildConfig(new LinkedList<>(vmProperties.getActiveIDs()),attacks,h);
             }
-        }
-
 
     }
 
+    private void buildConfig(List<Integer> activeIDs,List<ConfigElement<Attack>> attacks, ConfigHandler h) {
 
+        System.out.println("build config "+activeIDs);
+
+        for (JavaVersion jv : javaVersions.getActive()) {
+            RunnerConfig rc = new RunnerConfig(jv);
+            rc.activeVMProperties=new HashSet<>(activeIDs);
+            rc.logVersions = getOrderedActiveLogVersions();
+            rc.vmprops = vmProperties.getActive();
+            rc.attacks = attacks;
+           h.handle(rc);
+        }
+    }
+
+    private List<LogVersion> getOrderedActiveLogVersions() {
+        List<LogVersion> results=new LinkedList<>();
+        for(ConfigElement<LogVersion> l:getOrderedLogVersions()) {
+            if(l.isActive()) results.add(l.getBase());
+        }
+        return results;
+    }
+
+    private static class DotArrayStringComparitor   implements Comparator<String>{
+
+        private static final String digits="0123456789";
+
+        @Override
+        public  int compare(String a,String b) {
+            List<Object> o1bits = parse(a);
+            List<Object> o2bits = parse(b);
+
+          return DockerImageNameComparitor.compareVersions(o1bits, o2bits);
+        }
+
+        private List<Object> parse(String versions) {
+            List<Object> l=new LinkedList<>();
+            for(String v:versions.split("\\.")) {
+                int i=0;
+                char[] chars=v.toCharArray();
+                for (char aChar : chars) {
+                    int p = digits.indexOf(aChar);
+                    if (p >= 0) {
+                        i = i * 10;
+                        i = i + p;
+                    } else {
+                        break;
+                    }
+                }
+                l.add(i);
+
+            }
+            return l;
+        }
+    }
+
+    private static class DockerImageNameComparitor implements Comparator<String> {
+
+        private static final String digits="0123456789";
+        @Override
+        public int compare(String o1, String o2) {
+
+
+            if (o1 == null && o2 == null) return 0;
+            if (o1 == null) return 1;
+            if (o2 == null) return -1;
+            o1 = o1.trim();
+            o2 = o2.trim();
+            if (o1.equals(o2)) return 0;
+
+
+            List<Object> o1bits = parse(o1);
+            List<Object> o2bits = parse(o2);
+
+           return compareVersions(o1bits, o2bits);
+
+        }
+
+        public static int compareVersions(List<Object> o1bits,List<Object> o2bits) {
+
+
+            String name1=o1bits.remove(0).toString();
+            String name2=o2bits.remove(0).toString();
+
+            if(o1bits.size()>o2bits.size()) {
+                pad(o2bits,o1bits.size());
+            } else if(o2bits.size()> o1bits.size()) {
+                pad(o1bits,o2bits.size());
+            }
+
+            int namecomp=name1.compareTo(name2);
+            if(namecomp!=0) return namecomp;
+
+
+            while(!o1bits.isEmpty() && !o2bits.isEmpty()) {
+
+                Integer i1=(Integer)o1bits.remove(0);
+                Integer i2=(Integer)o2bits.remove(0);
+                namecomp=i1.compareTo(i2);
+                if(namecomp!=0) return namecomp;
+            }
+
+
+            return 0;
+        }
+
+        private static void pad(List<Object> l, int size) {
+            while(l.size()<size) {
+                l.add(0);
+            }
+        }
+
+        private List<Object> parse(String in) {
+            List<Object> l=new LinkedList<>();
+            int colon=in.indexOf(":");
+            if(colon<0) {
+                 // no version
+                l.add(in);
+                return l;
+            }
+            String name=in.substring(0,colon);
+            l.add(name);
+            String versions=in.substring(colon+1);
+            for(String v:versions.split("\\.")) {
+                int i=0;
+                char[] chars=v.toCharArray();
+                for (char aChar : chars) {
+                    int p = digits.indexOf(aChar);
+                    if (p >= 0) {
+                        i = i * 10;
+                        i = i + p;
+                    } else {
+                        break;
+                    }
+                }
+                 l.add(i);
+
+            }
+            return l;
+        }
+    }
 
 
 }

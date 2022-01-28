@@ -10,46 +10,30 @@ public class SummaryRecord {
 
     String jv;
     String lv;
+    String active;
     Map<String,Count>scores=new HashMap<>();
 
     public SummaryRecord(Result r) {
         this.jv=r.jv.version;
         this.lv=r.lv.getVersion();
+        this.active=r.activePropsLabels();
 
     }
 
-    public String getResultClass(AttackType t,ResultType rt) {
-        int c=getResult(t,rt);
-        if(c==0) return "bg-light";
-
-        switch( rt ) {
-            case SUCCESS:   return "bg-danger";
-            case PARTIAL:   return "bg-warning";
-            case FAIL:      return "bg-success";
-            case ERROR:     return "bg-secondary";
-
-            default: return "bg-info";
-
-        }
-
-    }
-    public int getResult(AttackType t,ResultType rt) {
-        String key=t.name()+"/"+rt.name();
-        if(scores.containsKey(key)==false) return 0;
-        return scores.get(key).count;
+    public int getResult(AttackType t,ResultType r) {
+        String cellKey= t.name()+"/"+r.name();
+        if(scores.containsKey(cellKey)) return scores.get(cellKey).count;
+        return 0;
     }
 
     public void record(Result dc) {
 
-        AttackType t=dc.getAttack().type;
-        ResultType rt=dc.result;
-        String key=t.name()+"/"+rt.name();
-        Count c=scores.get(key);
+
+        String cellKey= dc.getAttack().type.name()+"/"+dc.result.name();
+        Count c=scores.get(cellKey);
         if(c==null) {
-            c=new Count();
-            scores.put(key,c);
-        } else {
-            throw new RuntimeException("dup key?"+key);
+            c = new Count();
+            scores.put(cellKey, c);
         }
         c.count++;
 

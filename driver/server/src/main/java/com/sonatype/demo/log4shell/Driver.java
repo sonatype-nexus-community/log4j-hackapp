@@ -28,7 +28,7 @@ public class Driver {
         }
 
         rs.addSpecialistConsole("ldap");
-        rs.addSpecialistConsole("dns");
+      //  rs.addSpecialistConsole("dns");
         launcherRunner();
 
     }
@@ -68,10 +68,14 @@ public class Driver {
             RawResultsConverter converter=new RawResultsConverter(rcfg,record -> {
 
                 log.info("raw results returned {} lines",record.data.size());
-                record.result=record.getAttack().evaluate(record.data);
-
+                if(record.error!=null) {
+                    record.result=ResultType.ERROR;
+                } else {
+                    record.result = record.getAttack().evaluate(record.data);
+                }
+                if(config.isSilentMode()) record.data=null; // remove unwanted results
                 Console c = rs.addResults(record);
-                WebSocketHandler.handler.sendUpdate("console-" + c.handle + "-main");
+                if(c!=null) WebSocketHandler.handler.sendUpdate("console-" + c.handle + "-main");
 
             });
 

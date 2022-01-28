@@ -14,6 +14,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static com.sonatype.demo.log4shell.runner.Runner.*;
 
@@ -148,24 +149,28 @@ public class DockerProcessRunner {
 
         List<String> dockerProcessConfig=createConfig(dc);
 
-        log.info("driver setup(2): {}",String.join(" ",dockerProcessConfig));
+        log.info("driver setup(2): {}","{"+String.join("}{",dockerProcessConfig)+"}");
 
         runAttacks(dockerProcessConfig,handler);
 
     }
 
 
-   private void runAttacks(List<String> parameters, ResultsLineHandler handler) throws Exception {
+   private void runAttacks(List<String> parameters, ResultsLineHandler handler) {
 
-        new ProcessExecutor().command(parameters)
-                .redirectOutput(new LogOutputStream() {
-                    @Override
-                    protected void processLine(String line) {
+        try {
+            new ProcessExecutor().command(parameters)
+                    .redirectOutput(new LogOutputStream() {
+                        @Override
+                        protected void processLine(String line) {
                             handler.handle(line);
-                    }
-                })
-                .timeout(60, TimeUnit.SECONDS)
-                .execute();
+                        }
+                    })
+                    .timeout(180, TimeUnit.SECONDS)
+                    .execute();
+        } catch (Exception te) {
+                handler.error(te);
+        }
     }
 
 }

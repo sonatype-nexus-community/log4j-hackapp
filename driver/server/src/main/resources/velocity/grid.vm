@@ -50,7 +50,14 @@
                     <div class="card-body">
                         <button ic-post-to="/gridtest" class="button btn-danger float-right">Run Grid Tests</button>
                         <button ic-post-to="/gridcancel" class="button btn-danger float-right">Cancel Grid executions</button>
-
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Options</h5>
+                        <div id="options">
+                            #parse("/velocity/options.vm")
+                        </div>
                     </div>
                 </div>
         </div>

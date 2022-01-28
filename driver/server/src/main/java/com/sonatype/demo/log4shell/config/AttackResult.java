@@ -25,7 +25,7 @@ public class AttackResult {
 
         public boolean match(String line) {
 
-            System.out.println("line ["+line+"] check="+check+" d="+data+" c="+line.contains(data));
+           // System.out.println("line ["+line+"] check="+check+" d="+data+" c="+line.contains(data));
 
             switch(check) {
                 case CONTAINS:

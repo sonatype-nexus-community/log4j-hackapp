@@ -28,6 +28,7 @@ public class RawResultsConverter implements ResultsLineHandler {
     private List<String> data=null;
     private String payload=null;
     private Attack a=null;
+    private Throwable error;
 
 
     /*
@@ -97,8 +98,17 @@ public class RawResultsConverter implements ResultsLineHandler {
             return;
         }
 
+        if(data==null) System.out.println("data::"+line);
         if(data!=null) data.add(line);
     }
+
+    @Override
+    public void error(Throwable t) {
+        if(data!=null) data.add(t.getMessage());
+        this.error=t;
+        reportOutstanding();
+    }
+
 
     private void storePayload(String line, int index) {
 
@@ -117,7 +127,7 @@ public class RawResultsConverter implements ResultsLineHandler {
             a = Attack.buildAttack(AttackType.ADHOC, payload);
         }
         log.info("found new payload {} {} {}",attackID,a.type.name(),payload);
-
+        error=null;
     }
 
     private void storePropertyValue(String line,int index) {
@@ -151,8 +161,9 @@ public class RawResultsConverter implements ResultsLineHandler {
         if(data!=null) {
             Result r=new Result(a);
             r.data=data;
+            r.error=error;
             r.jv=c.getJavaVersion();
-            r.setActiveVMProperties(c.activeVMProperties);
+            r.setActiveVMProperties(c.getActiveVMProperties());
             r.lv=lv;
             r.setPayload(payload);
             r.properties=vmProperties;
@@ -169,6 +180,7 @@ public class RawResultsConverter implements ResultsLineHandler {
         lv=c.getLogVersion(logVersion);
         if(lv==null) throw new RuntimeException("unknown log version "+logVersion);
         vmProperties=new HashMap<>();
+        error=null;
         log.info("found log4j record {}",lv.getVersion());
     }
 

@@ -28,7 +28,6 @@ public class Interceptor extends InMemoryOperationInterceptor {
     @Override
     public void processAddRequest(InMemoryInterceptedAddRequest request) throws LDAPException {
 
-        log.info(">>>processAddRequest");
         ReadOnlyAddRequest roa=request.getRequest();
         log.info("added {}",roa.getDN());
 
@@ -108,10 +107,9 @@ public class Interceptor extends InMemoryOperationInterceptor {
             String data=key.substring(5);
             LdapServerUploader.upload("cn=echo",addr+" sent us "+data);
             return cache.get("cn=echo");
-
-
-
         }
+
+
         if(key.startsWith("version/")) {
             System.out.println(key);
             System.out.println("ask for classpath");

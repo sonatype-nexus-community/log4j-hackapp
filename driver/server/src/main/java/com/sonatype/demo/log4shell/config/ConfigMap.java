@@ -5,10 +5,10 @@ public class ConfigMap<T> {
 
     private final Map<Integer, ConfigElement<T>> entries=new TreeMap<>();
 
-    public int addEntry(T t) {
+    public ConfigElement<T> addEntry(T t) {
         ConfigElement<T> at=new ConfigElement<>(t,entries.size()+1);
         entries.put(at.getID(),at);
-        return at.getID();
+        return at;
     }
 
     public List<T> getActive() {
@@ -60,5 +60,13 @@ public class ConfigMap<T> {
             }
         }
         return props;
+    }
+
+    public boolean isActive(int id) {
+
+        ConfigElement<T> e=entries.get(id);
+        if(e==null) return false;
+        return e.isActive();
+
     }
 }

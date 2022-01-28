@@ -76,6 +76,7 @@ public class FrontEnd {
         put("/attack/:id/toggle", (req, res) -> ""+ config.toggleAttack(Integer.parseInt(req.params("id"))));
         put("/java/:id/toggle", (req, res) -> ""+ config.toggleJavaVersion(Integer.parseInt(req.params("id"))));
         put("/vmproperty/:id/toggle", (req, res) -> ""+config.toggleProperty(Integer.parseInt(req.params("id"))));
+        put("/option/:id/toggle", (req, res) -> ""+config.toggleOption(Integer.parseInt(req.params("id"))));
 
 
 
@@ -171,11 +172,6 @@ public class FrontEnd {
 
     }
 
-    private static void clearConsoles1() {
-
-        rs.clear();
-        WebSocketHandler.handler.sendUpdate("consoles");
-    }
 
     private static void triggerLdapServerConfig() {
 

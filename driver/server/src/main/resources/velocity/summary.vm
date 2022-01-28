@@ -15,6 +15,7 @@
 <tr>
 <th></th>
 <th></th>
+<th></th>
 #foreach($a in $attacks)
 <th colspan="5">$a.name()</th>
 #end
@@ -22,6 +23,7 @@
 <tr>
     <th>Image Name</th>
     <th>Log4J Version</th>
+    <th>active properties</th>
     #foreach($a in $attacks)
     #foreach($r in $results)
         <th>$r.name()</th>
@@ -35,6 +37,7 @@
     <tr>
         <td>$sr.jv</td>
         <td>$sr.lv</td>
+        <td>$sr.active</td>
         #foreach($a in $attacks)
           #foreach($r in $results)
            <td class="$sr.getResultClass($a,$r)">$sr.getResult($a,$r)</td>

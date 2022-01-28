@@ -1,8 +1,11 @@
 <table class="table">
     <thead><tr>
         <th>Java Required</th>
-        <th>Java Reported</th><th>Log4J</th>
-        <th>Attack type</th><th>Result type</th>
+        <th>Java Reported</th>
+        <th>Log4J</th>
+        <th>Active Props</th>
+        <th>Attack type</th>
+        <th>Result type</th>
         <th>Message mutated</th>
         <th>Payload</th>
         <th>Response</th>
@@ -12,6 +15,7 @@
     <tr><td>${r.jv.version}</td>
         <td>${r.reportedJava()}</td>
         <td>${r.lv.version}</td>
+        <td>${r.activePropsLabels()}</td>
         <td>${r.getAttackName()}</td>
         <td>${r.result.name()}</td>
         <td>${r.mutated}</td>

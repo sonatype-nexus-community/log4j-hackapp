@@ -1,0 +1,3 @@
+#foreach($o in $options)
+<label><input type="checkbox" class="form-check-input toggle" ic-put-to="/option/${o.getID()}/toggle" #if($o.isActive())checked#end>${o.label()}</label>
+#end

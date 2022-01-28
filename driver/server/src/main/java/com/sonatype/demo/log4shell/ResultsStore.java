@@ -1,7 +1,5 @@
 package com.sonatype.demo.log4shell;
 
-import com.sonatype.demo.log4shell.config.Attack;
-import com.sonatype.demo.log4shell.config.AttackType;
 import com.sonatype.demo.log4shell.config.Configuration;
 import com.sonatype.demo.log4shell.config.JavaVersion;
 import com.sonatype.demo.log4shell.ui.Console;
@@ -18,24 +16,32 @@ public class ResultsStore {
    private final Map<JavaVersion, Console> byJavaVersion=new TreeMap<>();
    private final Map<String,SummaryRecord> summary=new TreeMap<>();
     private final Map<String,Console> specialistConsoles=new HashMap<>();
+    private Configuration config=null;
 
 
    public ResultsStore(Configuration config) {
+       this.config=config;
        for(String s:config.getSpecialistConsoleNames()) {
            specialistConsoles.put(s,new Console(s));
        }
    }
     public Console addResults(Result dc) {
 
-       log.info("add {} lines",dc.data.size());
-        // create a console representation
-        Console  c=byJavaVersion.get(dc.jv);
-        if(c==null) throw new NullPointerException("missing console");
-            dc.id=results.size()+1;
-            results.add(dc);
-            resultsByID.put(dc.id,dc);
-            c.addResult(dc);
-            String resultKey=dc.getKey();
+        Console c=null;
+
+        dc.id=results.size()+1;
+        results.add(dc);
+        resultsByID.put(dc.id,dc);
+
+       if(!config.isSilentMode()) {
+           // create a console representation
+           c = byJavaVersion.get(dc.jv);
+           if (c == null) throw new NullPointerException("missing console");
+           c.addResult(dc);
+
+       }
+
+            String resultKey=dc.getPrimaryKey();
             SummaryRecord sr=summary.get(resultKey);
             if(sr==null) {
                 sr=new SummaryRecord(dc);
@@ -84,8 +90,10 @@ public class ResultsStore {
         return results;
     }
 
-    public Collection<Console> getConsoles() {
-        return byJavaVersion.values();
+    public List<Console> getConsoles() {
+       List<Console> consoles=new LinkedList<>();
+       config.getAllJavaVersions().forEach(cv -> { consoles.add(byJavaVersion.get(cv.getBase()));});
+        return consoles;
     }
 
     public Console getConsole(JavaVersion jv) {

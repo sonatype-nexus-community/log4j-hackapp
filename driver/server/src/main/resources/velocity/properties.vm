@@ -1,3 +1,6 @@
 #foreach($p in $properties)
-<label><input type="checkbox" class="form-check-input toggle" ic-put-to="/vmproperty/${p.getID()}/toggle" #if($p.isActive())checked#end>${p.label()}<span class="badge rounded-pill bg-info">${p.id}</span></label>
+<label><input type="checkbox" class="form-check-input toggle" ic-put-to="/vmproperty/${p.getID()}/toggle" #if($p.isActive())checked#end>
+    <span class="badge rounded-pill bg-info">${p.getID()}</span>
+    ${p.label()}
+</label>
 #end
