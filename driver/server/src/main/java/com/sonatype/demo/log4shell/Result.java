@@ -10,15 +10,15 @@ import java.util.*;
 @Data
 public class Result {
 
-     public List<Record> console;
-     public Throwable error;
+     private List<Record> console;
+     private Throwable error;
      private Set<Integer> activeVMProperties=new HashSet<>();
-     public boolean mutated;
-     int id;
-     public JavaVersion jv;
-     public LogVersion lv;
+     private boolean mutated;
+     private int id;
+     private JavaVersion jv;
+     private LogVersion lv;
      private Attack attack=null;
-     public ResultType result;
+     private ResultType result;
      private String payload;
      public List<String> data=new LinkedList<>();
      public Map<String,Object> properties;
@@ -100,4 +100,94 @@ public class Result {
 
                return new String(sb);
      }
+
+	public List<Record> getConsole() {
+		return console;
+	}
+
+	public void setConsole(List<Record> console) {
+		this.console = console;
+	}
+
+	public Throwable getError() {
+		return error;
+	}
+
+	public void setError(Throwable error) {
+		this.error = error;
+	}
+
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+	public JavaVersion getJv() {
+		return jv;
+	}
+
+	public void setJv(JavaVersion jv) {
+		this.jv = jv;
+	}
+
+	public LogVersion getLv() {
+		return lv;
+	}
+
+	public void setLv(LogVersion lv) {
+		this.lv = lv;
+	}
+
+	public ResultType getResult() {
+		return result;
+	}
+
+	public void setResult(ResultType result) {
+		this.result = result;
+	}
+
+	public List<String> getData() {
+		return data;
+	}
+
+	public void setData(List<String> data) {
+		this.data = data;
+	}
+
+	public Map<String, Object> getProperties() {
+		return properties;
+	}
+
+	public void setProperties(Map<String, Object> properties) {
+		this.properties = properties;
+	}
+
+	public Set<String> getVmprops() {
+		return vmprops;
+	}
+
+	public void setVmprops(Set<String> vmprops) {
+		this.vmprops = vmprops;
+	}
+
+	public String getJavaVersionName() {
+		return jv.version;
+	}
+
+	public String getLogVersionName() {
+		return lv.getVersion();
+	}
+
+	public String getResultName() {
+		return result.name();
+	}
+
+	public void setMutated() {
+		mutated=true;
+		
+	}
+
 }

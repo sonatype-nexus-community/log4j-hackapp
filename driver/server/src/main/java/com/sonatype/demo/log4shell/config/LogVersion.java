@@ -31,4 +31,12 @@ public class LogVersion{
     public String toString() {
         return version; //+"::"+location;
     }
+
+	public String getVersion() {
+		return version;
+	}
+
+	public String getLocation() {
+		return location;
+	}
 }

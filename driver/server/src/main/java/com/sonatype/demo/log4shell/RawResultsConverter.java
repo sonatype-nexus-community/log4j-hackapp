@@ -8,11 +8,9 @@ import com.sonatype.demo.log4shell.runner.GridRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
+import static com.sonatype.demo.log4shell.runner.GridRunner.LOG4J_VM_PROPERTY;
 import static com.sonatype.demo.log4shell.runner.Runner.*;
 
 public class RawResultsConverter implements ResultsLineHandler {
@@ -24,7 +22,8 @@ public class RawResultsConverter implements ResultsLineHandler {
 
     // log version specific data
     private LogVersion lv=null;
-    private Map<String,Object> vmProperties=null;
+    private Map<String,Object> systemPropertyValues=null;
+    private Set<Integer> activeProperties;
     private List<String> data=null;
     private String payload=null;
     private Attack a=null;
@@ -83,6 +82,13 @@ public class RawResultsConverter implements ResultsLineHandler {
 
         }
 
+        index= line.indexOf(LOG4J_VM_PROPERTY);
+        if(index>=0) {
+            storeActiveVMProperty(line,index);
+            return;
+
+        }
+
         index= line.indexOf(PAYLOAD_RESULTS_SEPERATOR);
 
         if(index>=0) {
@@ -100,6 +106,13 @@ public class RawResultsConverter implements ResultsLineHandler {
 
         if(data==null) System.out.println("data::"+line);
         if(data!=null) data.add(line);
+    }
+
+    private void storeActiveVMProperty(String line, int index) {
+        String suffix = line.substring(index + 1+(LOG4J_VM_PROPERTY.length()));
+        int space=suffix.indexOf(" ");
+        int propID=Integer.parseInt(suffix.substring(0,space));
+        activeProperties.add(propID);
     }
 
     @Override
@@ -146,10 +159,10 @@ public class RawResultsConverter implements ResultsLineHandler {
         log.info("found reported property type:{} key:{}",t,key);
         switch(t) {
             case '?' : //missing
-                vmProperties.put(key,null);
+                systemPropertyValues.put(key,null);
                 break;
             case '=' : // got a value
-                vmProperties.put(key,suffix.substring(1));
+                systemPropertyValues.put(key,suffix.substring(1));
                 break;
         }
 
@@ -161,12 +174,12 @@ public class RawResultsConverter implements ResultsLineHandler {
         if(data!=null) {
             Result r=new Result(a);
             r.data=data;
-            r.error=error;
-            r.jv=c.getJavaVersion();
-            r.setActiveVMProperties(c.getActiveVMProperties());
-            r.lv=lv;
+            r.setError(error);
+            r.setJv(c.getJavaVersion());
+            r.setActiveVMProperties(activeProperties);
+            r.setLv(lv);
             r.setPayload(payload);
-            r.properties=vmProperties;
+            r.properties=systemPropertyValues;
             rh.handle(r);
         }
         data=null;
@@ -179,7 +192,8 @@ public class RawResultsConverter implements ResultsLineHandler {
         String logVersion=line.substring(index+1+(GridRunner.LOG4J_VERSION_SEPERATOR.length()));
         lv=c.getLogVersion(logVersion);
         if(lv==null) throw new RuntimeException("unknown log version "+logVersion);
-        vmProperties=new HashMap<>();
+        systemPropertyValues=new HashMap<>();
+        activeProperties=new HashSet<>();
         error=null;
         log.info("found log4j record {}",lv.getVersion());
     }

@@ -25,16 +25,16 @@ public class ResultTypeChecker {
                 Attack a = ce.getBase();
                 ResultType rt = a.evaluate(dc.data);
                 if (rt != ResultType.UNKNOWN) {
-                    dc.result = rt;
+                    dc.setResult(rt);
                     dc.setAttack(a);
                     return;
                 }
             }
-            dc.result=ResultType.UNKNOWN;
+            dc.setResult(ResultType.UNKNOWN);
             return;
         }
 
-        dc.result=dc.getAttack().evaluate(dc.data);
+        dc.setResult(dc.getAttack().evaluate(dc.data));
 
     }
 

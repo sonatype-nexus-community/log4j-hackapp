@@ -14,8 +14,8 @@ public class SummaryRecord {
     Map<String,Count>scores=new HashMap<>();
 
     public SummaryRecord(Result r) {
-        this.jv=r.jv.version;
-        this.lv=r.lv.getVersion();
+        this.jv=r.getJavaVersionName();
+        this.lv=r.getLogVersionName();
         this.active=r.activePropsLabels();
 
     }
@@ -29,7 +29,7 @@ public class SummaryRecord {
     public void record(Result dc) {
 
 
-        String cellKey= dc.getAttack().type.name()+"/"+dc.result.name();
+        String cellKey= dc.getAttack().type.name()+"/"+dc.getResultName();
         Count c=scores.get(cellKey);
         if(c==null) {
             c = new Count();

@@ -29,13 +29,13 @@ public class ResultsStore {
 
         Console c=null;
 
-        dc.id=results.size()+1;
+        dc.setId(results.size()+1);
         results.add(dc);
-        resultsByID.put(dc.id,dc);
+        resultsByID.put(dc.getId(),dc);
 
        if(!config.isSilentMode()) {
            // create a console representation
-           c = byJavaVersion.get(dc.jv);
+           c = byJavaVersion.get(dc.getJv());
            if (c == null) throw new NullPointerException("missing console");
            c.addResult(dc);
 

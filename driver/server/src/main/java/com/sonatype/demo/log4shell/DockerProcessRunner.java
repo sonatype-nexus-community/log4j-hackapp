@@ -3,7 +3,6 @@ package com.sonatype.demo.log4shell;
 import com.sonatype.demo.log4shell.config.*;
 import com.sonatype.demo.log4shell.runner.GridRunner;
 import com.sonatype.demo.log4shelldemo.helpers.DockerEnvironment;
-import com.sonatype.demo.log4shelldemo.helpers.ProcessHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
@@ -14,7 +13,6 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import static com.sonatype.demo.log4shell.runner.Runner.*;
 
@@ -30,22 +28,7 @@ public class DockerProcessRunner {
 
     }
 
-    /*
-       Executes the docker process to run all the tests agains all the specfied log versions
-       Returns a dataset with the resultant data parsed into the approproate groups
-
-     */
-    public List<String> runLogger(Configuration.RunnerConfig dc) throws Exception {
-
-            List<String> dockerProcessConfig=createConfig(dc);
-
-            log.info("driver setup: {}",String.join(" ",dockerProcessConfig));
-
-           return  ProcessHelper.run(dockerProcessConfig);
-
-    }
-
-
+   
 
     private  List<String> createConfig(Configuration.RunnerConfig config) {
 
@@ -88,19 +71,13 @@ public class DockerProcessRunner {
         // setup java launcher
         parameters.add("java");
 
-        // and any -D's
-
-        for(SystemProperty v: config.getVMProperties()) {
-            parameters.add(v.toVMString());
-        }
-
         // add the classpath
         parameters.add("-cp");
         parameters.add(runnerPath);
         parameters.add(GridRunner.class.getCanonicalName());
 
 
-        // add the properties we want to check the values for
+        // add the general properties we want to check the values for
         // these get reported by the runner in the output
         // java.version is always set
 
@@ -108,12 +85,20 @@ public class DockerProcessRunner {
         if(props!=null && !props.isEmpty()) {
             parameters.add(REPORT_CMD);
             parameters.addAll(props);
+           
         }
 
+        
+       if(config.isComboMode()) {
+    	   parameters.add(COMBO_CMD);
+       }
        if(config.hasVMProperties()) {
            parameters.add(PROPERTIES_CMD);
-           for (SystemProperty sp : config.getVMProperties()) {
-                parameters.add("-D"+sp.name+"="+sp.value);
+           for (ConfigElement<SystemProperty> ce : config.getVMProperties()) {
+               SystemProperty sp=ce.getBase();
+               parameters.add(""+ce.getID());
+               parameters.add(sp.name);
+               parameters.add(sp.value);
            }
        }
 
@@ -151,12 +136,12 @@ public class DockerProcessRunner {
 
         log.info("driver setup(2): {}","{"+String.join("}{",dockerProcessConfig)+"}");
 
-        runAttacks(dockerProcessConfig,handler);
+        executeAttackProcess(dockerProcessConfig,handler);
 
     }
 
 
-   private void runAttacks(List<String> parameters, ResultsLineHandler handler) {
+   private void executeAttackProcess(List<String> parameters, ResultsLineHandler handler) {
 
         try {
             new ProcessExecutor().command(parameters)

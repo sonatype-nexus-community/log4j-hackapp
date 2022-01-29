@@ -38,6 +38,14 @@ public class Driver {
      */
     private void launcherRunner() {
 
+        createDriverThread().start();
+        createDriverThread().start();
+        createDriverThread().start();
+        createDriverThread().start();
+
+    }
+
+    private Thread createDriverThread() {
         Thread t=new Thread(() -> {
             while(true) {
                 try {
@@ -48,7 +56,7 @@ public class Driver {
 
             }
         });
-        t.start();
+        return t;
     }
 
     /*
@@ -68,10 +76,10 @@ public class Driver {
             RawResultsConverter converter=new RawResultsConverter(rcfg,record -> {
 
                 log.info("raw results returned {} lines",record.data.size());
-                if(record.error!=null) {
-                    record.result=ResultType.ERROR;
+                if(record.getError()!=null) {
+                    record.setResult(ResultType.ERROR);
                 } else {
-                    record.result = record.getAttack().evaluate(record.data);
+                    record.setResult(record.getAttack().evaluate(record.data));
                 }
                 if(config.isSilentMode()) record.data=null; // remove unwanted results
                 Console c = rs.addResults(record);

@@ -6,13 +6,17 @@ import java.util.concurrent.TimeUnit;
 
 public class ProcessLauncher {
 
-    public static  int javaLaunch(String classPath,String className,List<String> vmProperties,List<String> appParameters) throws Exception {
+    public static  int javaLaunch(String classPath,String className, List<VMProperty> vmProperties,List<String> appParameters) throws Exception {
 
         List<String> parameters=new LinkedList<>();
         parameters.add("java");
         parameters.add("-cp");
         parameters.add(classPath);
-        if(vmProperties!=null) parameters.addAll(vmProperties);
+
+        for(VMProperty p:vmProperties) {
+            parameters.add(p.toVMValue());
+        }
+
         parameters.add(className);
         if(appParameters!=null) parameters.addAll(appParameters);
 
@@ -29,5 +33,6 @@ public class ProcessLauncher {
 
             return process.exitValue();
         }
+
 
 }

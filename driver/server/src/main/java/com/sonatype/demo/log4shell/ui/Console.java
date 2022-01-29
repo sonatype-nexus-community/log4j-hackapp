@@ -40,7 +40,7 @@ public class Console {
 
             if(lines.size()==1) {
                 Record rec=new Record();
-                rec.version=dc.lv.getVersion();
+                rec.version=dc.getLogVersionName();
                 rec.propids =dc.getActiveVMProperties();
 
                 String l=lines.get(0).trim();
@@ -48,7 +48,7 @@ public class Console {
                     rec.line=l;
                 }
                 else {
-                    dc.mutated=true;
+                    dc.setMutated();
                     LinkedList<DiffMatchPatch.Diff> diff = dmp.diffMain(dc.getPayload(), l,false);
                     StringBuilder sb=new StringBuilder();
                     for(DiffMatchPatch.Diff d:diff) {
@@ -65,10 +65,10 @@ public class Console {
                results.add(rec);
             }
             else {
-                dc.mutated=true;
+            	 dc.setMutated();
                 for (String l : lines) {
                     Record rec = new Record();
-                    rec.version = dc.lv.getVersion();
+                    rec.version = dc.getLogVersionName();
                     rec.line = "<span class=\"text-danger\">" + l + "</span>";
                     results.add(rec);
                 }
@@ -82,7 +82,7 @@ public class Console {
 
         List<Record> results=toRecords(dc);
         records.addAll(results);
-         dc.console=results;
+         dc.setConsole(results);
 
     }
 

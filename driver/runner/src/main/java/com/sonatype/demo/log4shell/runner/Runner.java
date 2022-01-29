@@ -17,15 +17,15 @@ public class Runner {
     public static final String REPORT_SELECTOR = "report";
     public static final String LOG_SELECTOR = "log";
     public static final String PROPERTIES_SELECTOR = "properties";
+    public static final String COMBO_SELECTOR = "combo";
 
     public static final String REPORT_CMD = "--"+REPORT_SELECTOR;
     public static final String PAYLOAD_CMD = "--"+ PAYLOAD_SELECTOR;
     public static final String LOG_CMD = "--"+LOG_SELECTOR;
     public static final String PROPERTIES_CMD = "--"+PROPERTIES_SELECTOR;
+    public static final String COMBO_CMD = "--"+COMBO_SELECTOR;
 
 
-    // -Dcom.sun.jndi.ldap.object.trustURLCodebase=true -Dcom.sun.jndi.rmi.object.trustURLCodebase=true
- //While RCE is not possible without these flags, you will still get pingback, in minecraft's example, allowing you to get the IP of everyone connected.
     public static void main(String[] args) {
 
         Logger logger = LoggerFactory.getLogger(Runner.class);
@@ -50,6 +50,7 @@ public class Runner {
             }
         }
 
+        
         List<String> msgs=paramters.get(PAYLOAD_SELECTOR);
         // payloads come as a pair
         // element 1 is the id

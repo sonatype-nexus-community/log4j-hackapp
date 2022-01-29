@@ -1,17 +1,21 @@
 package model;
 
-import lombok.*;
+
 import java.util.*;
 
-@Data
-@AllArgsConstructor
 public class Todo {
 
     String title;
     String id;
-    Status status;
+    Status status; 
 
-    public void toggleStatus() {
+    public Todo(String t, String i, Status s) {
+		this.title=t;
+		this.id=i;
+		this.status=s;
+	}
+
+	public void toggleStatus() {
         this.status = isComplete() ? Status.ACTIVE : Status.COMPLETE;
     }
 
@@ -26,4 +30,21 @@ public class Todo {
     public String toString() {
         return "todo(title="+title+", status="+status+")";
     }
+
+	public String getId() {
+		return id;
+	}
+
+	public void setTitle(String t) {
+		this.title=t;
+		
+	}
+
+	public Status getStatus() {
+		return status;
+	}
+
+	public void setStatus(Status s) {
+		this.status=s;
+	}
 }

@@ -334,7 +334,7 @@ public class Configuration {
 
         private final JavaVersion jv;
         public List<LogVersion> logVersions;
-       private List<SystemProperty> vmprops;
+       private List<ConfigElement<SystemProperty>> vmprops;
         public List<ConfigElement<Attack>> attacks;
         private Set<Integer> activeVMProperties;
 
@@ -355,7 +355,7 @@ public class Configuration {
             return vmprops!=null && !vmprops.isEmpty();
         }
 
-        public List<SystemProperty> getVMProperties() {
+        public List<ConfigElement<SystemProperty>> getVMProperties() {
             return Collections.unmodifiableList(vmprops);
         }
 
@@ -396,6 +396,34 @@ public class Configuration {
             return activeVMProperties;
         }
 
+		public boolean isComboMode() {
+			return Configuration.this.isComboMode();		}
+
+
+    }
+
+    public void generateAttackConfigs(List<ConfigElement<Attack>> attacks,ConfigHandler h) {
+        System.out.println("Generating attacks");
+        System.out.println("Silent Mode="+isSilentMode());
+        System.out.println("Combo  Mode="+isComboMode());
+
+
+        for (JavaVersion jv : javaVersions.getActive()) {
+
+            RunnerConfig rc = new RunnerConfig(jv);
+            rc.activeVMProperties=vmProperties.getActiveIDs();
+            rc.logVersions = getOrderedActiveLogVersions();
+            rc.vmprops = vmProperties.getActiveElements();
+            rc.attacks = attacks;
+            h.handle(rc);
+        }
+
+    }
+
+
+
+    public boolean isComboMode() {
+        return configBinaryOptions.isActive(comboMode);
     }
 
     public void generateRunnerConfigs(List<ConfigElement<Attack>> attacks,ConfigHandler h) {
@@ -426,7 +454,7 @@ public class Configuration {
             RunnerConfig rc = new RunnerConfig(jv);
             rc.activeVMProperties=new HashSet<>(activeIDs);
             rc.logVersions = getOrderedActiveLogVersions();
-            rc.vmprops = vmProperties.getActive();
+            rc.vmprops = vmProperties.getActiveElements();
             rc.attacks = attacks;
            h.handle(rc);
         }
