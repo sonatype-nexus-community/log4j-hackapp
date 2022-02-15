@@ -11,9 +11,9 @@ docker-compose build
 
 ## setup
 
-Edit the javalevels.txt file in the root of the project.
-Add the names of docker images that have Java installed to the list.
-Note that the Java runtime in the image of your choice must be at least Java 8 and must be on the container classpath. 
+Edit the config/javalevels.txt file to contain the names of docker images that have Java installed and which are to be used.
+
+Note that the Java runtime in the image of choice must be at least Java 8 and must be on the container classpath. 
 All images listed must be in the local docker cache otherwise the will be shown by the tool but they will be disabled.
 
 Simply pull the image before running this application 
