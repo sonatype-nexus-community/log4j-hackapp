@@ -2,11 +2,12 @@ package com.sonatype.demo.log4shell.runner;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-public class ProcessLauncher {
+public class JavaProcessLauncher {
 
-    public static  int javaLaunch(String classPath,String className, List<VMProperty> vmProperties,List<String> appParameters) throws Exception {
+    public static  int javaLaunch(String classPath, String className, Set<VMProperty> vmProperties, List<String> appParameters) throws Exception {
 
         List<String> parameters=new LinkedList<>();
         parameters.add("java");

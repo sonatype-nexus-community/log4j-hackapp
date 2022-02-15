@@ -22,7 +22,7 @@ public class JavaVersion implements Comparable{
         if(o instanceof JavaVersion ==false) return -1;
         JavaVersion jo= (JavaVersion) o;
         if(jo==this) return 0;
-        return version.compareTo(jo.version);
+       return Configuration.DockerImageNameComparitor.compareVersions(version,jo.version);
 
     }
 

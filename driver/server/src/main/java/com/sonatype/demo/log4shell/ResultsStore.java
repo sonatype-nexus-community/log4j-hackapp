@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ResultsStore {
 
@@ -17,6 +18,8 @@ public class ResultsStore {
    private final Map<String,SummaryRecord> summary=new TreeMap<>();
     private final Map<String,Console> specialistConsoles=new HashMap<>();
     private Configuration config=null;
+    private ResultsByAttackResult grouping=new ResultsByAttackResult();
+    private AtomicInteger resultCounter=new AtomicInteger(0);
 
 
    public ResultsStore(Configuration config) {
@@ -28,10 +31,10 @@ public class ResultsStore {
     public Console addResults(Result dc) {
 
         Console c=null;
-
-        dc.setId(results.size()+1);
+        dc.setId( resultCounter.addAndGet(1));
         results.add(dc);
         resultsByID.put(dc.getId(),dc);
+        System.out.println("run "+dc.getId()+" / "+config.totalRuns);
 
        if(!config.isSilentMode()) {
            // create a console representation
@@ -40,6 +43,7 @@ public class ResultsStore {
            c.addResult(dc);
 
        }
+            grouping.addResult(dc);
 
             String resultKey=dc.getPrimaryKey();
             SummaryRecord sr=summary.get(resultKey);
@@ -73,6 +77,9 @@ public class ResultsStore {
     public void clear() {
         results.clear();
         summary.clear();
+        resultCounter.set(0);
+        grouping=new ResultsByAttackResult();
+
         for(Console c:byJavaVersion.values()) {
             c.records.clear();
         }
@@ -120,5 +127,9 @@ public class ResultsStore {
 
     public Integer resultsCount() {
        return resultsByID.size();
+    }
+
+    public List<ResultsByAttackResult.Group> getGroupResults() {
+       return grouping.summary();
     }
 }

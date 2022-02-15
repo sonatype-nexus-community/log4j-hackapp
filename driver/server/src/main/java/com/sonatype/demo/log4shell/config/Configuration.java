@@ -1,7 +1,6 @@
 package com.sonatype.demo.log4shell.config;
 import com.sonatype.demo.log4shell.*;
 import com.sonatype.demo.log4shelldemo.helpers.DockerEnvironment;
-import org.paukov.combinatorics3.Generator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,6 +41,9 @@ public class Configuration {
     private int comboMode;
     private int silentMode;
     private int parallelMode;
+
+    public int totalRuns =0;
+
 
     public static Configuration loadConfig(File config) throws Exception {
 
@@ -329,12 +331,18 @@ public class Configuration {
         return configBinaryOptions.isActive(silentMode);
     }
 
+    public Collection<? extends JavaVersion> getActiveJavaVersions() {
+        return javaVersions.getActive();
+    }
+
 
     public class RunnerConfig {
 
         private final JavaVersion jv;
         public List<LogVersion> logVersions;
-       private List<ConfigElement<SystemProperty>> vmprops;
+        public int totalRuns=0;
+        public int unitRuns=0;
+        private List<ConfigElement<SystemProperty>> vmprops;
         public List<ConfigElement<Attack>> attacks;
         private Set<Integer> activeVMProperties;
 
@@ -402,24 +410,6 @@ public class Configuration {
 
     }
 
-    public void generateAttackConfigs(List<ConfigElement<Attack>> attacks,ConfigHandler h) {
-        System.out.println("Generating attacks");
-        System.out.println("Silent Mode="+isSilentMode());
-        System.out.println("Combo  Mode="+isComboMode());
-
-
-        for (JavaVersion jv : javaVersions.getActive()) {
-
-            RunnerConfig rc = new RunnerConfig(jv);
-            rc.activeVMProperties=vmProperties.getActiveIDs();
-            rc.logVersions = getOrderedActiveLogVersions();
-            rc.vmprops = vmProperties.getActiveElements();
-            rc.attacks = attacks;
-            h.handle(rc);
-        }
-
-    }
-
 
 
     public boolean isComboMode() {
@@ -427,35 +417,35 @@ public class Configuration {
     }
 
     public void generateRunnerConfigs(List<ConfigElement<Attack>> attacks,ConfigHandler h) {
-
-            // if in property combo mode we do all combinaions of active properties (inc empty set)
-            // also disable any data storage other than the basics
-
-            if(configBinaryOptions.isActive(comboMode)) {
-                System.out.println("Generating property combination attack");
-                Generator.subset(vmProperties.getActiveIDs())
-                        .simple()
-                        .stream()
-                        .forEach(s -> buildConfig(s, attacks, h));
-            } else {
-                System.out.println("Generating attacks");
-                System.out.println("Silent Mode="+isSilentMode());
-
-                buildConfig(new LinkedList<>(vmProperties.getActiveIDs()),attacks,h);
-            }
-
+      buildConfig(new LinkedList<>(vmProperties.getActiveIDs()),attacks,h);
     }
 
     private void buildConfig(List<Integer> activeIDs,List<ConfigElement<Attack>> attacks, ConfigHandler h) {
 
-        System.out.println("build config "+activeIDs);
+        int jvCount=javaVersions.getActive().size();
+        int lvCount=logVersions.getActive().size();
+        int attackCount=attacks.size();
+        int propCount=activeIDs.size();
+        int combos=1;
+        if(isComboMode()) {
+            combos=(int)Math.pow(2,propCount);
+        }
+        int runsPerJVM=lvCount*attackCount*combos;
+
+        totalRuns =jvCount*runsPerJVM;
+
+        System.out.println("scheduling "+ totalRuns +" attack runs at "+runsPerJVM+" per JVM");
+        System.out.println("jv="+jvCount+",lv="+lvCount+",ac="+attackCount+",pc="+propCount+",combos="+combos);
+
+
+
 
         for (JavaVersion jv : javaVersions.getActive()) {
             RunnerConfig rc = new RunnerConfig(jv);
             rc.activeVMProperties=new HashSet<>(activeIDs);
             rc.logVersions = getOrderedActiveLogVersions();
             rc.vmprops = vmProperties.getActiveElements();
-            rc.attacks = attacks;
+            rc.attacks=attacks;
            h.handle(rc);
         }
     }
@@ -468,7 +458,7 @@ public class Configuration {
         return results;
     }
 
-    private static class DotArrayStringComparitor   implements Comparator<String>{
+     public static class DotArrayStringComparitor   implements Comparator<String>{
 
         private static final String digits="0123456789";
 
@@ -501,12 +491,17 @@ public class Configuration {
         }
     }
 
-    private static class DockerImageNameComparitor implements Comparator<String> {
+    public static class DockerImageNameComparitor implements Comparator<String> {
 
         private static final String digits="0123456789";
         @Override
         public int compare(String o1, String o2) {
 
+           return compareVersions(o1,o2);
+
+        }
+
+        public static int compareVersions(String o1,String o2) {
 
             if (o1 == null && o2 == null) return 0;
             if (o1 == null) return 1;
@@ -519,10 +514,9 @@ public class Configuration {
             List<Object> o1bits = parse(o1);
             List<Object> o2bits = parse(o2);
 
-           return compareVersions(o1bits, o2bits);
+            return compareVersions(o1bits, o2bits);
 
         }
-
         public static int compareVersions(List<Object> o1bits,List<Object> o2bits) {
 
 
@@ -557,7 +551,7 @@ public class Configuration {
             }
         }
 
-        private List<Object> parse(String in) {
+        private static List<Object> parse(String in) {
             List<Object> l=new LinkedList<>();
             int colon=in.indexOf(":");
             if(colon<0) {

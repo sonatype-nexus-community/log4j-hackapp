@@ -1,0 +1,21 @@
+<table class="table">
+    <thead>
+    <tr>
+        <th>Attack Type</th>
+        <th>Result</th>
+        <th>Java Versions</th>
+        <th>Log Versions</th>
+        <th>System Properties</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    #foreach($row in $rows)
+    <tr>
+        #foreach($cell in $row)
+        <td>$cell</td>
+        #end
+    </tr>
+    #end
+    </tbody>
+</table>

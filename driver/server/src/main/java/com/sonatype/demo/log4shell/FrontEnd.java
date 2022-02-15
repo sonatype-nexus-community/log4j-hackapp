@@ -64,6 +64,8 @@ public class FrontEnd {
 
         get("/views/gridtable",  (req, res) -> render.renderGridTable());
 
+        get("/views/groups",  (req, res) -> render.renderGroups());
+
 
         get("/views/console/:id",  (req, res) -> {
             String consoleID=req.params("id");

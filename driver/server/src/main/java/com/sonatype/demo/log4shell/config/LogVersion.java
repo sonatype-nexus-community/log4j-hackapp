@@ -3,7 +3,7 @@ package com.sonatype.demo.log4shell.config;
 import lombok.Data;
 
 @Data
-public class LogVersion{
+public class LogVersion implements Comparable{
 
     private int id;
    private String version;
@@ -39,4 +39,17 @@ public class LogVersion{
 	public String getLocation() {
 		return location;
 	}
+
+
+
+    @Override
+    public int compareTo(Object o) {
+
+        if(o==null) return -1;
+        if(o instanceof LogVersion ==false) return -1;
+        LogVersion lo= (LogVersion) o;
+        if(lo==this) return 0;
+        return Configuration.DockerImageNameComparitor.compareVersions(version,lo.version);
+
+    }
 }

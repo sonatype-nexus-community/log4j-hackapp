@@ -7,5 +7,9 @@ class VMProperty {
 
     public String toVMValue() {
         return "-D" + name + "=" + value;
+
+    }
+    public String toString() {
+        return ""+id+"["+name+"]"+value;
     }
 }

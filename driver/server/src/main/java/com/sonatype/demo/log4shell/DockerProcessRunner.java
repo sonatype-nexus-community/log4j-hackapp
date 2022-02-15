@@ -88,10 +88,9 @@ public class DockerProcessRunner {
            
         }
 
-        
-       if(config.isComboMode()) {
-    	   parameters.add(COMBO_CMD);
-       }
+        if(config.isComboMode()) {
+            parameters.add(COMBO_CMD);
+        }
        if(config.hasVMProperties()) {
            parameters.add(PROPERTIES_CMD);
            for (ConfigElement<SystemProperty> ce : config.getVMProperties()) {

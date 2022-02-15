@@ -1,9 +1,6 @@
 package com.sonatype.demo.log4shell.ui;
 
-import com.sonatype.demo.log4shell.Driver;
-import com.sonatype.demo.log4shell.Result;
-import com.sonatype.demo.log4shell.ResultType;
-import com.sonatype.demo.log4shell.ResultsStore;
+import com.sonatype.demo.log4shell.*;
 import com.sonatype.demo.log4shell.config.*;
 import com.sonatype.demo.log4shelldemo.helpers.DockerEnvironment;
 import spark.ModelAndView;
@@ -145,4 +142,36 @@ public class HtmlRenderer {
 
     }
 
+    public Object renderGroups() {
+
+        TreeSet j=new TreeSet();
+        j.addAll(config.getActiveJavaVersions());
+        SetRenderer jvmRenderer=new SetRenderer(j);
+
+        TreeSet l=new TreeSet();
+        l.addAll(config.getActiveLogVersions());
+        SetRenderer logRenderer=new SetRenderer(l);
+
+        Map<String, Object> model = new HashMap<>();
+        List<List<String>> lines=new LinkedList<>();
+
+        for(ResultsByAttackResult.Group g:rs.getGroupResults()) {
+                List<String> line=new LinkedList<>();
+                line.add(g.at.name());
+                line.add(g.rt.name());
+                line.add(jvmRenderer.asRangeListHtml(g.jvs));
+                line.add(logRenderer.asRangeListHtml(g.lvs));
+                  if (g.allProps) {
+                    line.add("all");
+               } else {
+                    line.add(g.props.toString());
+              }
+                  lines.add(line);
+        }
+
+        model.put("rows",lines);
+
+
+        return renderTemplate("velocity/groups.vm", model);
+    }
 }
